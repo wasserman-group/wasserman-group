@@ -1,0 +1,554 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>n2v.methods.oucarter &mdash; n2v  documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../../../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/graphviz.css" type="text/css" />
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> n2v
+          
+
+          
+            
+            <img src="../../../_static/logo_nameless_png.png" class="logo" alt="Logo"/>
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../install.html"><strong>Installation</strong></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../first_steps.html"><strong>First Steps</strong></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../on_the_grid.html"><strong>On the Grid</strong></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../invert.html"><strong>Inverting A Density</strong></a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">n2v</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+      <li>n2v.methods.oucarter</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for n2v.methods.oucarter</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">oucarter.py</span>
+
+<span class="sd">Functions associated with Ou-Carter inversion</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">opt_einsum</span> <span class="kn">import</span> <span class="n">contract</span>
+<span class="k">try</span><span class="p">:</span>
+    <span class="kn">import</span> <span class="nn">psi4</span>
+<span class="k">except</span><span class="p">:</span>
+    <span class="k">pass</span>
+
+<div class="viewcode-block" id="OC"><a class="viewcode-back" href="../../../api/n2v.OC.html#n2v.OC">[docs]</a><span class="k">class</span> <span class="nc">OC</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Ou-Carter density to potential inversion [1].</span>
+<span class="sd">    [1] [J. Chem. Theory Comput. 2018, 14, 5680−5689]</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">_get_l_kinetic_energy_density_directly</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">D</span><span class="p">,</span> <span class="n">C</span><span class="p">,</span> <span class="n">grid_info</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Calculate $\frac{\tau_L^{KS}}{\rho^{KS}}-\frac{\tau_P^{KS}}{\rho^{KS}}$:</span>
+<span class="sd">        laplace_rho_temp: $\frac{\nabla^2 \rho}{4}$;</span>
+<span class="sd">        tauW_temp: $\frac{|\napla \rho|^2}{8|\rho|}$;</span>
+<span class="sd">        tauLmP_rho: $\frac{|\napla \rho|^2}{8|\rho|^2} - \frac{\nabla^2 \rho}{4\rho}$.</span>
+
+<span class="sd">        (i.e. the 2dn and 3rd term in eqn. (17) in [1] over $\rho$.):</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="n">grid_info</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">tauLmP_rho</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Vpot</span><span class="o">.</span><span class="n">grid</span><span class="p">()</span><span class="o">.</span><span class="n">npoints</span><span class="p">())</span>
+            <span class="n">nblocks</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">Vpot</span><span class="o">.</span><span class="n">nblocks</span><span class="p">()</span>
+
+            <span class="n">points_func</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">Vpot</span><span class="o">.</span><span class="n">properties</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">blocks</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">blocks</span><span class="p">,</span> <span class="n">npoints</span><span class="p">,</span> <span class="n">points_func</span> <span class="o">=</span> <span class="n">grid_info</span>
+            <span class="n">tauLmP_rho</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">npoints</span><span class="p">)</span>
+            <span class="n">nblocks</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">blocks</span><span class="p">)</span>
+
+        <span class="n">points_func</span><span class="o">.</span><span class="n">set_deriv</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+
+        <span class="n">iw</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">l_block</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nblocks</span><span class="p">):</span>
+            <span class="c1"># Obtain general grid information</span>
+            <span class="k">if</span> <span class="n">blocks</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">l_grid</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">Vpot</span><span class="o">.</span><span class="n">get_block</span><span class="p">(</span><span class="n">l_block</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">l_grid</span> <span class="o">=</span> <span class="n">blocks</span><span class="p">[</span><span class="n">l_block</span><span class="p">]</span>
+            <span class="n">l_npoints</span> <span class="o">=</span> <span class="n">l_grid</span><span class="o">.</span><span class="n">npoints</span><span class="p">()</span>
+
+            <span class="n">points_func</span><span class="o">.</span><span class="n">compute_points</span><span class="p">(</span><span class="n">l_grid</span><span class="p">)</span>
+            <span class="n">l_lpos</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">l_grid</span><span class="o">.</span><span class="n">functions_local_to_global</span><span class="p">())</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">l_lpos</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">iw</span> <span class="o">+=</span> <span class="n">l_npoints</span>
+                <span class="k">continue</span>
+            <span class="n">l_phi</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">points_func</span><span class="o">.</span><span class="n">basis_values</span><span class="p">()[</span><span class="s2">&quot;PHI&quot;</span><span class="p">])[:</span><span class="n">l_npoints</span><span class="p">,</span> <span class="p">:</span><span class="n">l_lpos</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span>
+            <span class="n">l_phi_x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">points_func</span><span class="o">.</span><span class="n">basis_values</span><span class="p">()[</span><span class="s2">&quot;PHI_X&quot;</span><span class="p">])[:</span><span class="n">l_npoints</span><span class="p">,</span> <span class="p">:</span><span class="n">l_lpos</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span>
+            <span class="n">l_phi_y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">points_func</span><span class="o">.</span><span class="n">basis_values</span><span class="p">()[</span><span class="s2">&quot;PHI_Y&quot;</span><span class="p">])[:</span><span class="n">l_npoints</span><span class="p">,</span> <span class="p">:</span><span class="n">l_lpos</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span>
+            <span class="n">l_phi_z</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">points_func</span><span class="o">.</span><span class="n">basis_values</span><span class="p">()[</span><span class="s2">&quot;PHI_Z&quot;</span><span class="p">])[:</span><span class="n">l_npoints</span><span class="p">,</span> <span class="p">:</span><span class="n">l_lpos</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span>
+            <span class="n">l_phi_xx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">points_func</span><span class="o">.</span><span class="n">basis_values</span><span class="p">()[</span><span class="s2">&quot;PHI_XX&quot;</span><span class="p">])[:</span><span class="n">l_npoints</span><span class="p">,</span> <span class="p">:</span><span class="n">l_lpos</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span>
+            <span class="n">l_phi_yy</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">points_func</span><span class="o">.</span><span class="n">basis_values</span><span class="p">()[</span><span class="s2">&quot;PHI_YY&quot;</span><span class="p">])[:</span><span class="n">l_npoints</span><span class="p">,</span> <span class="p">:</span><span class="n">l_lpos</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span>
+            <span class="n">l_phi_zz</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">points_func</span><span class="o">.</span><span class="n">basis_values</span><span class="p">()[</span><span class="s2">&quot;PHI_ZZ&quot;</span><span class="p">])[:</span><span class="n">l_npoints</span><span class="p">,</span> <span class="p">:</span><span class="n">l_lpos</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span>
+
+            <span class="n">lD</span> <span class="o">=</span> <span class="n">D</span><span class="p">[(</span><span class="n">l_lpos</span><span class="p">[:,</span> <span class="kc">None</span><span class="p">],</span> <span class="n">l_lpos</span><span class="p">)]</span>
+            <span class="c1"># lC = C[l_lpos, :]</span>
+
+            <span class="n">rho</span> <span class="o">=</span> <span class="n">contract</span><span class="p">(</span><span class="s1">&#39;pm,mn,pn-&gt;p&#39;</span><span class="p">,</span> <span class="n">l_phi</span><span class="p">,</span> <span class="n">lD</span><span class="p">,</span> <span class="n">l_phi</span><span class="p">)</span>
+            <span class="n">rho_inv</span> <span class="o">=</span> <span class="mi">1</span><span class="o">/</span><span class="n">rho</span>
+
+            <span class="c1"># Calculate the second term</span>
+            <span class="n">laplace_rho_temp</span> <span class="o">=</span> <span class="n">contract</span><span class="p">(</span><span class="s1">&#39;ab,pa,pb-&gt;p&#39;</span><span class="p">,</span> <span class="n">lD</span><span class="p">,</span> <span class="n">l_phi</span><span class="p">,</span> <span class="n">l_phi_xx</span> <span class="o">+</span> <span class="n">l_phi_yy</span> <span class="o">+</span> <span class="n">l_phi_zz</span><span class="p">)</span>
+            <span class="c1"># laplace_rho_temp += contract(&#39;pm, mn, pn-&gt;p&#39;, l_phi_x,lD, l_phi_x)</span>
+            <span class="c1"># laplace_rho_temp += contract(&#39;pm, mn, pn-&gt;p&#39;, l_phi_y,lD, l_phi_y)</span>
+            <span class="c1"># laplace_rho_temp += contract(&#39;pm, mn, pn-&gt;p&#39;, l_phi_z,lD, l_phi_z)</span>
+            <span class="n">laplace_rho_temp</span> <span class="o">+=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">((</span><span class="n">l_phi_x</span> <span class="o">@</span> <span class="n">lD</span><span class="p">)</span> <span class="o">*</span> <span class="n">l_phi_x</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+            <span class="n">laplace_rho_temp</span> <span class="o">+=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">((</span><span class="n">l_phi_y</span> <span class="o">@</span> <span class="n">lD</span><span class="p">)</span> <span class="o">*</span> <span class="n">l_phi_y</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+            <span class="n">laplace_rho_temp</span> <span class="o">+=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">((</span><span class="n">l_phi_z</span> <span class="o">@</span> <span class="n">lD</span><span class="p">)</span> <span class="o">*</span> <span class="n">l_phi_z</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+            <span class="n">laplace_rho_temp</span> <span class="o">*=</span> <span class="mf">0.25</span> <span class="o">*</span> <span class="mi">2</span>
+
+            <span class="c1"># Calculate the third term</span>
+            <span class="n">tauW_temp</span> <span class="o">=</span> <span class="n">contract</span><span class="p">(</span><span class="s1">&#39;pm, mn, pn-&gt;p&#39;</span><span class="p">,</span> <span class="n">l_phi</span><span class="p">,</span> <span class="n">lD</span><span class="p">,</span> <span class="n">l_phi_x</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span>
+            <span class="n">tauW_temp</span> <span class="o">+=</span> <span class="n">contract</span><span class="p">(</span><span class="s1">&#39;pm, mn, pn-&gt;p&#39;</span><span class="p">,</span> <span class="n">l_phi</span><span class="p">,</span> <span class="n">lD</span><span class="p">,</span> <span class="n">l_phi_y</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span>
+            <span class="n">tauW_temp</span> <span class="o">+=</span> <span class="n">contract</span><span class="p">(</span><span class="s1">&#39;pm, mn, pn-&gt;p&#39;</span><span class="p">,</span> <span class="n">l_phi</span><span class="p">,</span> <span class="n">lD</span><span class="p">,</span> <span class="n">l_phi_z</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span>
+            <span class="n">tauW_temp</span> <span class="o">*=</span> <span class="n">rho_inv</span> <span class="o">*</span> <span class="mf">0.125</span> <span class="o">*</span> <span class="mi">4</span>
+
+            <span class="n">tauLmP_rho</span><span class="p">[</span><span class="n">iw</span><span class="p">:</span> <span class="n">iw</span> <span class="o">+</span> <span class="n">l_npoints</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="o">-</span><span class="n">laplace_rho_temp</span> <span class="o">+</span> <span class="n">tauW_temp</span><span class="p">)</span> <span class="o">*</span> <span class="n">rho_inv</span>
+            <span class="n">iw</span> <span class="o">+=</span> <span class="n">l_npoints</span>
+        <span class="k">assert</span> <span class="n">iw</span> <span class="o">==</span> <span class="n">tauLmP_rho</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="s2">&quot;Somehow the whole space is not fully integrated.&quot;</span>
+
+        <span class="k">return</span> <span class="n">tauLmP_rho</span>
+
+    <span class="k">def</span> <span class="nf">_get_optimized_external_potential</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">grid_info</span><span class="p">,</span> <span class="n">average_alpha_beta</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        $</span>
+<span class="sd">        v^{~}{ext}(r) = \epsilon^{-LDA}(r)</span>
+<span class="sd">        - \frac{\tau^{LDA}{L}}{n^{LDA}(r)}</span>
+<span class="sd">        - v_{H}^{LDA}(r) - v_{xc}^{LDA}(r)</span>
+<span class="sd">        $</span>
+<span class="sd">        (22) in [1].</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">Nalpha</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">nalpha</span>
+        <span class="n">Nbeta</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">nbeta</span>
+
+        <span class="c1"># SVWN calculation</span>
+        <span class="n">wfn_LDA</span> <span class="o">=</span> <span class="n">psi4</span><span class="o">.</span><span class="n">energy</span><span class="p">(</span><span class="s2">&quot;SVWN/&quot;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">basis_str</span><span class="p">,</span> <span class="n">molecule</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">mol</span><span class="p">,</span> <span class="n">return_wfn</span><span class="o">=</span><span class="kc">True</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">Da_LDA</span> <span class="o">=</span> <span class="n">wfn_LDA</span><span class="o">.</span><span class="n">Da</span><span class="p">()</span><span class="o">.</span><span class="n">np</span>
+        <span class="n">Db_LDA</span> <span class="o">=</span> <span class="n">wfn_LDA</span><span class="o">.</span><span class="n">Db</span><span class="p">()</span><span class="o">.</span><span class="n">np</span>
+        <span class="n">Ca_LDA</span> <span class="o">=</span> <span class="n">wfn_LDA</span><span class="o">.</span><span class="n">Ca</span><span class="p">()</span><span class="o">.</span><span class="n">np</span>
+        <span class="n">Cb_LDA</span> <span class="o">=</span> <span class="n">wfn_LDA</span><span class="o">.</span><span class="n">Cb</span><span class="p">()</span><span class="o">.</span><span class="n">np</span>
+        <span class="n">epsilon_a_LDA</span> <span class="o">=</span> <span class="n">wfn_LDA</span><span class="o">.</span><span class="n">epsilon_a</span><span class="p">()</span><span class="o">.</span><span class="n">np</span>
+        <span class="n">epsilon_b_LDA</span> <span class="o">=</span> <span class="n">wfn_LDA</span><span class="o">.</span><span class="n">epsilon_b</span><span class="p">()</span><span class="o">.</span><span class="n">np</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">Vpot</span> <span class="o">=</span> <span class="n">wfn_LDA</span><span class="o">.</span><span class="n">V_potential</span><span class="p">()</span>
+
+        <span class="n">vxc_LDA_DFT</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">on_grid_vxc</span><span class="p">(</span><span class="n">Da</span><span class="o">=</span><span class="n">Da_LDA</span><span class="p">,</span> <span class="n">Db</span><span class="o">=</span><span class="n">Db_LDA</span><span class="p">,</span> <span class="n">Vpot</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">Vpot</span><span class="p">)</span>
+        <span class="n">vxc_LDA</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">on_grid_vxc</span><span class="p">(</span><span class="n">Da</span><span class="o">=</span><span class="n">Da_LDA</span><span class="p">,</span> <span class="n">Db</span><span class="o">=</span><span class="n">Db_LDA</span><span class="p">,</span> <span class="n">grid</span><span class="o">=</span><span class="n">grid_info</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">ref</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">assert</span> <span class="n">vxc_LDA</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="mi">2</span>
+            <span class="n">vxc_LDA_beta</span> <span class="o">=</span> <span class="n">vxc_LDA</span><span class="p">[:,</span><span class="mi">1</span><span class="p">]</span>
+            <span class="n">vxc_LDA</span> <span class="o">=</span> <span class="n">vxc_LDA</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span>
+            <span class="n">vxc_LDA_DFT_beta</span> <span class="o">=</span> <span class="n">vxc_LDA_DFT</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span>
+            <span class="n">vxc_LDA_DFT</span> <span class="o">=</span> <span class="n">vxc_LDA_DFT</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span>
+
+        <span class="c1"># _average_local_orbital_energy() taken from mrks.py.</span>
+        <span class="n">e_bar_DFT</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_average_local_orbital_energy</span><span class="p">(</span><span class="n">Da_LDA</span><span class="p">,</span> <span class="n">Ca_LDA</span><span class="p">[:,:</span><span class="n">Nalpha</span><span class="p">],</span> <span class="n">epsilon_a_LDA</span><span class="p">[:</span><span class="n">Nalpha</span><span class="p">])</span>
+        <span class="n">e_bar</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_average_local_orbital_energy</span><span class="p">(</span><span class="n">Da_LDA</span><span class="p">,</span> <span class="n">Ca_LDA</span><span class="p">[:,</span> <span class="p">:</span><span class="n">Nalpha</span><span class="p">],</span> <span class="n">epsilon_a_LDA</span><span class="p">[:</span><span class="n">Nalpha</span><span class="p">],</span> <span class="n">grid_info</span><span class="o">=</span><span class="n">grid_info</span><span class="p">)</span>
+
+
+        <span class="n">tauLmP_rho_DFT</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_l_kinetic_energy_density_directly</span><span class="p">(</span><span class="n">Da_LDA</span><span class="p">,</span> <span class="n">Ca_LDA</span><span class="p">[:,:</span><span class="n">Nalpha</span><span class="p">])</span>
+        <span class="n">tauLmP_rho</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_l_kinetic_energy_density_directly</span><span class="p">(</span><span class="n">Da_LDA</span><span class="p">,</span> <span class="n">Ca_LDA</span><span class="p">[:,:</span><span class="n">Nalpha</span><span class="p">],</span> <span class="n">grid_info</span><span class="o">=</span><span class="n">grid_info</span><span class="p">)</span>
+
+        <span class="n">tauP_rho_DFT</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pauli_kinetic_energy_density</span><span class="p">(</span><span class="n">Da_LDA</span><span class="p">,</span> <span class="n">Ca_LDA</span><span class="p">[:,:</span><span class="n">Nalpha</span><span class="p">])</span>
+        <span class="n">tauP_rho</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pauli_kinetic_energy_density</span><span class="p">(</span><span class="n">Da_LDA</span><span class="p">,</span> <span class="n">Ca_LDA</span><span class="p">[:,:</span><span class="n">Nalpha</span><span class="p">],</span> <span class="n">grid_info</span><span class="o">=</span><span class="n">grid_info</span><span class="p">)</span>
+
+        <span class="n">tauL_rho_DFT</span> <span class="o">=</span> <span class="n">tauLmP_rho_DFT</span> <span class="o">+</span> <span class="n">tauP_rho_DFT</span>
+        <span class="n">tauL_rho</span> <span class="o">=</span> <span class="n">tauLmP_rho</span> <span class="o">+</span> <span class="n">tauP_rho</span>
+
+        <span class="n">vext_opt_no_H_DFT</span> <span class="o">=</span> <span class="n">e_bar_DFT</span> <span class="o">-</span> <span class="n">tauL_rho_DFT</span> <span class="o">-</span> <span class="n">vxc_LDA_DFT</span>
+        <span class="n">vext_opt_no_H</span> <span class="o">=</span> <span class="n">e_bar</span> <span class="o">-</span> <span class="n">tauL_rho</span> <span class="o">-</span> <span class="n">vxc_LDA</span>
+
+        <span class="n">J</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">form_jk</span><span class="p">(</span><span class="n">Ca_LDA</span><span class="p">[:,:</span><span class="n">Nalpha</span><span class="p">],</span>  <span class="n">Cb_LDA</span><span class="p">[:,:</span><span class="n">Nbeta</span><span class="p">])[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">vext_opt_no_H_DFT_Fock</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dft_grid_to_fock</span><span class="p">(</span><span class="n">vext_opt_no_H_DFT</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">Vpot</span><span class="p">)</span>
+        <span class="n">vext_opt_DFT_Fock</span> <span class="o">=</span> <span class="n">vext_opt_no_H_DFT_Fock</span> <span class="o">-</span> <span class="n">J</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">J</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+
+        <span class="c1"># # Does vext_opt need a shift?</span>
+        <span class="c1"># Fock_LDA = self.T + vext_opt_DFT_Fock + J[0] + J[1] + self.dft_grid_to_fock(vxc_LDA_DFT, self.Vpot)</span>
+        <span class="c1"># eigvecs_a = self.diagonalize(Fock_LDA, self.nalpha)[-1]</span>
+        <span class="c1"># shift = eigvecs_a[Nalpha-1] - epsilon_a_LDA[Nalpha-1]</span>
+        <span class="c1"># vext_opt_DFT_Fock -= shift * self.S2</span>
+        <span class="c1"># print(&quot;LDA shift:&quot;, shift, eigvecs_a[Nalpha-1], epsilon_a_LDA[Nalpha-1])</span>
+
+        <span class="n">vH</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">on_grid_esp</span><span class="p">(</span><span class="n">grid</span><span class="o">=</span><span class="n">grid_info</span><span class="p">,</span> <span class="n">wfn</span><span class="o">=</span><span class="n">wfn_LDA</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">vext_opt</span> <span class="o">=</span> <span class="n">vext_opt_no_H</span> <span class="o">-</span> <span class="n">vH</span>
+        <span class="c1"># vext_opt -= shift</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">ref</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">e_bar_DFT_beta</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_average_local_orbital_energy</span><span class="p">(</span><span class="n">Db_LDA</span><span class="p">,</span> <span class="n">Cb_LDA</span><span class="p">[:,:</span><span class="n">Nbeta</span><span class="p">],</span> <span class="n">epsilon_b_LDA</span><span class="p">[:</span><span class="n">Nbeta</span><span class="p">])</span>
+            <span class="n">e_bar_beta</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_average_local_orbital_energy</span><span class="p">(</span><span class="n">Db_LDA</span><span class="p">,</span> <span class="n">Cb_LDA</span><span class="p">[:,</span> <span class="p">:</span><span class="n">Nbeta</span><span class="p">],</span> <span class="n">epsilon_b_LDA</span><span class="p">[:</span><span class="n">Nbeta</span><span class="p">],</span> <span class="n">grid_info</span><span class="o">=</span><span class="n">grid_info</span><span class="p">)</span>
+
+
+            <span class="n">tauLmP_rho_DFT_beta</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_l_kinetic_energy_density_directly</span><span class="p">(</span><span class="n">Db_LDA</span><span class="p">,</span> <span class="n">Cb_LDA</span><span class="p">[:,:</span><span class="n">Nbeta</span><span class="p">])</span>
+            <span class="n">tauLmP_rho_beta</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_l_kinetic_energy_density_directly</span><span class="p">(</span><span class="n">Db_LDA</span><span class="p">,</span> <span class="n">Cb_LDA</span><span class="p">[:,:</span><span class="n">Nalpha</span><span class="p">],</span> <span class="n">grid_info</span><span class="o">=</span><span class="n">grid_info</span><span class="p">)</span>
+
+            <span class="n">tauP_rho_DFT_beta</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pauli_kinetic_energy_density</span><span class="p">(</span><span class="n">Db_LDA</span><span class="p">,</span> <span class="n">Cb_LDA</span><span class="p">[:,:</span><span class="n">Nbeta</span><span class="p">])</span>
+            <span class="n">tauP_rho_beta</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pauli_kinetic_energy_density</span><span class="p">(</span><span class="n">Db_LDA</span><span class="p">,</span> <span class="n">Cb_LDA</span><span class="p">[:,:</span><span class="n">Nbeta</span><span class="p">],</span> <span class="n">grid_info</span><span class="o">=</span><span class="n">grid_info</span><span class="p">)</span>
+
+            <span class="n">tauL_rho_DFT_beta</span> <span class="o">=</span> <span class="n">tauLmP_rho_DFT_beta</span> <span class="o">+</span> <span class="n">tauP_rho_DFT_beta</span>
+            <span class="n">tauL_rho_beta</span> <span class="o">=</span> <span class="n">tauLmP_rho_beta</span> <span class="o">+</span> <span class="n">tauP_rho_beta</span>
+
+            <span class="n">vext_opt_no_H_DFT_beta</span> <span class="o">=</span> <span class="n">e_bar_DFT_beta</span> <span class="o">-</span> <span class="n">tauL_rho_DFT_beta</span> <span class="o">-</span> <span class="n">vxc_LDA_DFT_beta</span>
+            <span class="n">vext_opt_no_H_beta</span> <span class="o">=</span> <span class="n">e_bar_beta</span> <span class="o">-</span> <span class="n">tauL_rho_beta</span> <span class="o">-</span> <span class="n">vxc_LDA_beta</span>
+
+            <span class="n">vext_opt_no_H_DFT_Fock_beta</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dft_grid_to_fock</span><span class="p">(</span><span class="n">vext_opt_no_H_DFT_beta</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">Vpot</span><span class="p">)</span>
+            <span class="n">vext_opt_DFT_Fock_beta</span> <span class="o">=</span> <span class="n">vext_opt_no_H_DFT_Fock_beta</span> <span class="o">-</span> <span class="n">J</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">J</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+
+            <span class="n">vext_opt_beta</span> <span class="o">=</span> <span class="n">vext_opt_no_H_beta</span> <span class="o">-</span> <span class="n">vH</span>
+
+            <span class="c1"># vext_opt_DFT_Fock = (vext_opt_DFT_Fock + vext_opt_DFT_Fock_beta) * 0.5</span>
+            <span class="c1"># vext_opt = (vext_opt + vext_opt_beta) * 0.5</span>
+
+            <span class="k">return</span> <span class="p">(</span><span class="n">vext_opt_DFT_Fock</span><span class="p">,</span> <span class="n">vext_opt_DFT_Fock_beta</span><span class="p">),</span> <span class="p">(</span><span class="n">vext_opt</span><span class="p">,</span> <span class="n">vext_opt_beta</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">vext_opt_DFT_Fock</span><span class="p">,</span> <span class="n">vext_opt</span>
+    
+<div class="viewcode-block" id="OC.oucarter"><a class="viewcode-back" href="../../../api/n2v.OC.html#n2v.OC.oucarter">[docs]</a>    <span class="k">def</span> <span class="nf">oucarter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">maxiter</span><span class="p">,</span> <span class="n">vxc_grid</span><span class="p">,</span> <span class="n">D_tol</span><span class="o">=</span><span class="mf">1e-7</span><span class="p">,</span>
+             <span class="n">eig_tol</span><span class="o">=</span><span class="mf">1e-4</span><span class="p">,</span> <span class="n">frac_old</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">init</span><span class="o">=</span><span class="s2">&quot;scan&quot;</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        (23) in [1].</span>
+<span class="sd">        [1] [J. Chem. Theory Comput. 2018, 14, 5680−5689]</span>
+
+<span class="sd">        parameters:</span>
+<span class="sd">        ----------------------</span>
+<span class="sd">            maxiter: int</span>
+<span class="sd">                same as opt_max_iter</span>
+<span class="sd">            vxc_grid: np.ndarray of shape (3, num_grid_points)</span>
+<span class="sd">                The final result will be represented on this grid</span>
+<span class="sd">                default: 1e-4</span>
+<span class="sd">            D_tol: float, opt</span>
+<span class="sd">                convergence criteria for density matrices.</span>
+<span class="sd">                default: 1e-7</span>
+<span class="sd">            eig_tol: float, opt</span>
+<span class="sd">                convergence criteria for occupied eigenvalue spectrum.</span>
+<span class="sd">                default: 1e-4</span>
+<span class="sd">            frac_old: float, opt</span>
+<span class="sd">                Linear mixing parameter for current vxc and old vxc.</span>
+<span class="sd">                If 0, no old vxc is mixed in.</span>
+<span class="sd">                Should be in [0,1)</span>
+<span class="sd">                default: 0.5.</span>
+<span class="sd">            init: string, opt</span>
+<span class="sd">                Initial guess method.</span>
+<span class="sd">                default: &quot;SCAN&quot;</span>
+<span class="sd">                1) If None, input wfn info will be used as initial guess.</span>
+<span class="sd">                2) If &quot;continue&quot; is given, then it will not initialize</span>
+<span class="sd">                but use the densities and orbitals stored. Meaningly,</span>
+<span class="sd">                one can run a quick WY calculation as the initial</span>
+<span class="sd">                guess. This can also be used to user speficified</span>
+<span class="sd">                initial guess by setting Da, Coca, eigvec_a.</span>
+<span class="sd">                3) If it&#39;s not continue, it would be expecting a</span>
+<span class="sd">                method name string that works for psi4. A separate psi4 calculation</span>
+<span class="sd">                would be performed.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="c1"># if self.ref != 1:</span>
+        <span class="c1">#     raise ValueError(&quot;Currently only supports Spin-Restricted &quot;</span>
+        <span class="c1">#                      &quot;calculations since Spin-Unrestricted CI &quot;</span>
+        <span class="c1">#                      &quot;is not supported by Psi4.&quot;)</span>
+        
+        <span class="n">grid_info</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">grid_to_blocks</span><span class="p">(</span><span class="n">vxc_grid</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">ref</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">grid_info</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">set_pointers</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">wfn</span><span class="o">.</span><span class="n">Da</span><span class="p">())</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">grid_info</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">set_pointers</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">wfn</span><span class="o">.</span><span class="n">Da</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">wfn</span><span class="o">.</span><span class="n">Db</span><span class="p">())</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">ref</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">vext_opt_Fock</span><span class="p">,</span> <span class="n">vext_opt</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_optimized_external_potential</span><span class="p">(</span><span class="n">grid_info</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="p">(</span><span class="n">vext_opt_Fock</span><span class="p">,</span> <span class="n">vext_opt_Fock_beta</span><span class="p">),</span> <span class="p">(</span><span class="n">vext_opt</span><span class="p">,</span> <span class="n">vext_opt_beta</span><span class="p">)</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_optimized_external_potential</span><span class="p">(</span><span class="n">grid_info</span><span class="p">)</span>
+
+        <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">Vpot</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+        
+        <span class="n">vH0_Fock</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">va</span>
+        
+        <span class="n">Nalpha</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">nalpha</span>
+        <span class="n">Nbeta</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">nbeta</span>
+        <span class="c1"># Initialization.</span>
+        <span class="k">if</span> <span class="n">init</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">Da</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Dt</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">Coca</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ct</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">eigvecs_a</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">wfn</span><span class="o">.</span><span class="n">epsilon_a</span><span class="p">()</span><span class="o">.</span><span class="n">np</span><span class="p">[:</span><span class="n">Nalpha</span><span class="p">]</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">Db</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Dt</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">Cocb</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ct</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">eigvecs_b</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">wfn</span><span class="o">.</span><span class="n">epsilon_b</span><span class="p">()</span><span class="o">.</span><span class="n">np</span><span class="p">[:</span><span class="n">Nbeta</span><span class="p">]</span>
+        <span class="k">elif</span> <span class="n">init</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">==</span><span class="s2">&quot;continue&quot;</span><span class="p">:</span>
+            <span class="k">pass</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">wfn_temp</span> <span class="o">=</span> <span class="n">psi4</span><span class="o">.</span><span class="n">energy</span><span class="p">(</span><span class="n">init</span><span class="o">+</span><span class="s2">&quot;/&quot;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">basis_str</span><span class="p">,</span> 
+                                   <span class="n">molecule</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">mol</span><span class="p">,</span> 
+                                   <span class="n">return_wfn</span><span class="o">=</span><span class="kc">True</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">Da</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">wfn_temp</span><span class="o">.</span><span class="n">Da</span><span class="p">())</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">Coca</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">wfn_temp</span><span class="o">.</span><span class="n">Ca</span><span class="p">())[:,</span> <span class="p">:</span><span class="n">Nalpha</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">eigvecs_a</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">wfn_temp</span><span class="o">.</span><span class="n">epsilon_a</span><span class="p">())</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">Db</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">wfn_temp</span><span class="o">.</span><span class="n">Db</span><span class="p">())</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">Cocb</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">wfn_temp</span><span class="o">.</span><span class="n">Cb</span><span class="p">())[:,</span> <span class="p">:</span><span class="n">Nbeta</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">eigvecs_b</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">wfn_temp</span><span class="o">.</span><span class="n">epsilon_b</span><span class="p">())</span>
+            <span class="k">del</span> <span class="n">wfn_temp</span>
+
+        <span class="c1"># nerror = self.on_grid_density(Da=self.Dt[0]-self.Da, Db=self.Dt[1]-self.Da, Vpot=self.Vpot)</span>
+        <span class="c1"># w = self.Vpot.get_np_xyzw()[-1]</span>
+        <span class="c1"># nerror = np.sum(np.abs(nerror.T) * w)</span>
+        <span class="c1"># print(&quot;nerror&quot;, nerror)</span>
+
+        <span class="n">vxc_old</span> <span class="o">=</span> <span class="mf">0.0</span>
+        <span class="n">vxc_old_beta</span> <span class="o">=</span> <span class="mf">0.0</span>
+        <span class="n">Da_old</span> <span class="o">=</span> <span class="mf">0.0</span>
+        <span class="n">eig_old</span> <span class="o">=</span> <span class="mf">0.0</span>
+        <span class="n">tauLmP_rho</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_l_kinetic_energy_density_directly</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Dt</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">ct</span><span class="p">[</span><span class="mi">0</span><span class="p">][:,</span> <span class="p">:</span><span class="n">Nalpha</span><span class="p">])</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">ref</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">tauLmP_rho_beta</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_l_kinetic_energy_density_directly</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Dt</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">ct</span><span class="p">[</span><span class="mi">1</span><span class="p">][:,</span> <span class="p">:</span><span class="n">Nbeta</span><span class="p">])</span>
+
+        <span class="k">for</span> <span class="n">OC_step</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">maxiter</span><span class="o">+</span><span class="mi">1</span><span class="p">):</span>
+            <span class="n">tauP_rho</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pauli_kinetic_energy_density</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Da</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">Coca</span><span class="p">)</span>
+            <span class="c1"># _average_local_orbital_energy() taken from mrks.py.</span>
+            <span class="n">e_bar</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_average_local_orbital_energy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Da</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">Coca</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">eigvecs_a</span><span class="p">[:</span><span class="n">Nalpha</span><span class="p">])</span>
+            <span class="n">shift</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">eigvecs_a</span><span class="p">[</span><span class="n">Nalpha</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">wfn</span><span class="o">.</span><span class="n">epsilon_a</span><span class="p">()</span><span class="o">.</span><span class="n">np</span><span class="p">[</span><span class="n">Nalpha</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span>
+            <span class="c1"># vxc + vext_opt + vH0</span>
+            <span class="n">vxc_extH</span> <span class="o">=</span> <span class="n">e_bar</span> <span class="o">-</span> <span class="n">tauLmP_rho</span> <span class="o">-</span> <span class="n">tauP_rho</span> <span class="o">-</span> <span class="n">shift</span>
+
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">ref</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">tauP_rho_beta</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pauli_kinetic_energy_density</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Db</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">Cocb</span><span class="p">)</span>
+                <span class="n">e_bar_beta</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_average_local_orbital_energy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Db</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">Cocb</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">eigvecs_b</span><span class="p">[:</span><span class="n">Nbeta</span><span class="p">])</span>
+                <span class="n">shift_beta</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">eigvecs_b</span><span class="p">[</span><span class="n">Nbeta</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">wfn</span><span class="o">.</span><span class="n">epsilon_b</span><span class="p">()</span><span class="o">.</span><span class="n">np</span><span class="p">[</span><span class="n">Nbeta</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span>
+                <span class="c1"># vxc + vext_opt + vH0</span>
+                <span class="n">vxc_extH_beta</span> <span class="o">=</span> <span class="n">e_bar_beta</span> <span class="o">-</span> <span class="n">tauLmP_rho_beta</span> <span class="o">-</span> <span class="n">tauP_rho_beta</span> <span class="o">-</span> <span class="n">shift_beta</span>
+
+            <span class="n">Derror</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Da</span> <span class="o">-</span> <span class="n">Da_old</span><span class="p">)</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">nbf</span> <span class="o">**</span> <span class="mi">2</span>
+            <span class="n">eerror</span> <span class="o">=</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">eigvecs_a</span><span class="p">[:</span><span class="n">Nalpha</span><span class="p">]</span> <span class="o">-</span> <span class="n">eig_old</span><span class="p">)</span> <span class="o">/</span> <span class="n">Nalpha</span><span class="p">)</span>
+            <span class="k">if</span> <span class="p">(</span><span class="n">Derror</span> <span class="o">&lt;</span> <span class="n">D_tol</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="n">eerror</span> <span class="o">&lt;</span> <span class="n">eig_tol</span><span class="p">):</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;KSDFT stops updating.&quot;</span><span class="p">)</span>
+                <span class="k">break</span>
+
+            <span class="c1"># linear Mixture</span>
+            <span class="k">if</span> <span class="n">OC_step</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">vxc_extH</span> <span class="o">=</span> <span class="n">vxc_extH</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">frac_old</span><span class="p">)</span> <span class="o">+</span> <span class="n">vxc_old</span> <span class="o">*</span> <span class="n">frac_old</span>
+
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">ref</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+                    <span class="n">vxc_extH_beta</span> <span class="o">=</span> <span class="n">vxc_extH_beta</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">frac_old</span><span class="p">)</span> <span class="o">+</span> <span class="n">vxc_old_beta</span> <span class="o">*</span> <span class="n">frac_old</span>
+
+            <span class="n">vxc_old</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">vxc_extH</span><span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">ref</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">vxc_old_beta</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">vxc_extH_beta</span><span class="p">)</span>
+
+            <span class="c1"># Save old data.</span>
+            <span class="n">Da_old</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Da</span><span class="p">)</span>
+            <span class="n">eig_old</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">eigvecs_a</span><span class="p">[:</span><span class="n">Nalpha</span><span class="p">])</span>
+
+            <span class="n">Vxc_extH_Fock</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dft_grid_to_fock</span><span class="p">(</span><span class="n">vxc_extH</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">Vpot</span><span class="p">)</span>
+            <span class="n">Vxc_Fock</span> <span class="o">=</span> <span class="n">Vxc_extH_Fock</span> <span class="o">-</span> <span class="n">vext_opt_Fock</span> <span class="o">-</span> <span class="n">vH0_Fock</span>
+
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">ref</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">Vxc_extH_Fock_beta</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dft_grid_to_fock</span><span class="p">(</span><span class="n">vxc_extH_beta</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">Vpot</span><span class="p">)</span>
+                <span class="n">Vxc_Fock_beta</span> <span class="o">=</span> <span class="n">Vxc_extH_Fock_beta</span> <span class="o">-</span> <span class="n">vext_opt_Fock_beta</span> <span class="o">-</span> <span class="n">vH0_Fock</span>
+
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">ref</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_diagonalize_with_potential_vFock</span><span class="p">(</span><span class="n">v</span><span class="o">=</span><span class="n">Vxc_Fock</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_diagonalize_with_potential_vFock</span><span class="p">(</span><span class="n">v</span><span class="o">=</span><span class="p">(</span><span class="n">Vxc_Fock</span><span class="p">,</span> <span class="n">Vxc_Fock_beta</span><span class="p">))</span>
+
+
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Iter: </span><span class="si">{</span><span class="n">OC_step</span><span class="si">}</span><span class="s2">, Density Change: </span><span class="si">{</span><span class="n">Derror</span><span class="si">:</span><span class="s2">2.2e</span><span class="si">}</span><span class="s2">, Eigenvalue Change: </span><span class="si">{</span><span class="n">eerror</span><span class="si">:</span><span class="s2">2.2e</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
+            <span class="c1"># nerror = self.on_grid_density(Da=self.Dt[0] - self.Da, Db=self.Dt[1] - self.Da, Vpot=self.Vpot)</span>
+            <span class="c1"># nerror = np.sum(np.abs(nerror.T) * w)</span>
+            <span class="c1"># print(&quot;nerror&quot;, nerror)</span>
+
+        <span class="c1"># Calculate vxc on grid</span>
+
+        <span class="n">vH0</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">on_grid_esp</span><span class="p">(</span><span class="n">grid</span><span class="o">=</span><span class="n">grid_info</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">tauLmP_rho</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_l_kinetic_energy_density_directly</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Dt</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">ct</span><span class="p">[</span><span class="mi">0</span><span class="p">][:,</span> <span class="p">:</span><span class="n">Nalpha</span><span class="p">],</span> <span class="n">grid_info</span><span class="o">=</span><span class="n">grid_info</span><span class="p">)</span>
+        <span class="n">tauP_rho</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pauli_kinetic_energy_density</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Da</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">Coca</span><span class="p">,</span> <span class="n">grid_info</span><span class="o">=</span><span class="n">grid_info</span><span class="p">)</span>
+        <span class="n">shift</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">eigvecs_a</span><span class="p">[</span><span class="n">Nalpha</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">wfn</span><span class="o">.</span><span class="n">epsilon_a</span><span class="p">()</span><span class="o">.</span><span class="n">np</span><span class="p">[</span><span class="n">Nalpha</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span>
+        <span class="n">e_bar</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_average_local_orbital_energy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Da</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">Coca</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">eigvecs_a</span><span class="p">[:</span><span class="n">Nalpha</span><span class="p">],</span> <span class="n">grid_info</span><span class="o">=</span><span class="n">grid_info</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">ref</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">tauLmP_rho_beta</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_l_kinetic_energy_density_directly</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Dt</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">ct</span><span class="p">[</span><span class="mi">1</span><span class="p">][:,</span> <span class="p">:</span><span class="n">Nbeta</span><span class="p">],</span>
+                                                                     <span class="n">grid_info</span><span class="o">=</span><span class="n">grid_info</span><span class="p">)</span>
+            <span class="n">tauP_rho_beta</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pauli_kinetic_energy_density</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Db</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">Cocb</span><span class="p">,</span> <span class="n">grid_info</span><span class="o">=</span><span class="n">grid_info</span><span class="p">)</span>
+            <span class="n">shift_beta</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">eigvecs_b</span><span class="p">[</span><span class="n">Nbeta</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">wfn</span><span class="o">.</span><span class="n">epsilon_b</span><span class="p">()</span><span class="o">.</span><span class="n">np</span><span class="p">[</span><span class="n">Nbeta</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span>
+            <span class="n">e_bar_beta</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_average_local_orbital_energy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Db</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">Cocb</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">eigvecs_b</span><span class="p">[:</span><span class="n">Nbeta</span><span class="p">],</span> <span class="n">grid_info</span><span class="o">=</span><span class="n">grid_info</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">ref</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">grid</span><span class="o">.</span><span class="n">vxc</span> <span class="o">=</span> <span class="n">e_bar</span> <span class="o">-</span> <span class="n">tauLmP_rho</span> <span class="o">-</span> <span class="n">tauP_rho</span> <span class="o">-</span> <span class="n">vext_opt</span> <span class="o">-</span> <span class="n">vH0</span> <span class="o">-</span> <span class="n">shift</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">grid</span><span class="o">.</span><span class="n">vxc</span><span class="p">,</span> <span class="n">e_bar</span><span class="p">,</span> <span class="n">tauLmP_rho</span><span class="p">,</span> <span class="n">tauP_rho</span><span class="p">,</span> <span class="n">vext_opt</span><span class="p">,</span> <span class="n">vH0</span><span class="p">,</span> <span class="n">shift</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">grid</span><span class="o">.</span><span class="n">vxc</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">((</span><span class="n">e_bar</span> <span class="o">-</span> <span class="n">tauLmP_rho</span> <span class="o">-</span> <span class="n">tauP_rho</span> <span class="o">-</span> <span class="n">vext_opt</span> <span class="o">-</span> <span class="n">vH0</span> <span class="o">-</span> <span class="n">shift</span><span class="p">,</span>
+                                      <span class="n">e_bar_beta</span> <span class="o">-</span> <span class="n">tauLmP_rho_beta</span> <span class="o">-</span> <span class="n">tauP_rho_beta</span> <span class="o">-</span> <span class="n">vext_opt_beta</span> <span class="o">-</span> <span class="n">vH0</span> <span class="o">-</span> <span class="n">shift_beta</span>
+                                      <span class="p">))</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">grid</span><span class="o">.</span><span class="n">vxc</span><span class="p">,</span> <span class="p">(</span><span class="n">e_bar</span><span class="p">,</span> <span class="n">e_bar_beta</span><span class="p">),</span> <span class="p">(</span><span class="n">tauLmP_rho</span><span class="p">,</span> <span class="n">tauLmP_rho_beta</span><span class="p">),</span> \
+                   <span class="p">(</span><span class="n">tauP_rho</span><span class="p">,</span><span class="n">tauP_rho_beta</span><span class="p">),</span> <span class="p">(</span><span class="n">vext_opt</span><span class="p">,</span> <span class="n">vext_opt_beta</span><span class="p">),</span> <span class="n">vH0</span><span class="p">,</span> <span class="p">(</span><span class="n">shift</span><span class="p">,</span> <span class="n">shift_beta</span><span class="p">)</span></div></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2020, Wasserman Group.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

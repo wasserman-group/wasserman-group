@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#2D2D2D" />
+  
+  <title>n2v :: n2v.methods.wuyang</title>
+  
+
+  <link rel="icon" type="image/png" sizes="32x32" href="../../../_static/img/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="../../../_static/img/favicon-16x16.png">
+        <link rel="index" title="Index"
+              href="../../../genindex.html"/>
+
+  <link rel="stylesheet" href="../../../_static/css/insegel.css"/>
+
+  <script type="text/javascript">
+    var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:'',
+        VERSION:'',
+        LANGUAGE:'None',
+        COLLAPSE_INDEX:false,
+        FILE_SUFFIX:'.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+    };
+  </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+
+  <script src="https://email.tl.fortawesome.com/c/eJxNjUEOgyAQAF8jR7Kw6wIHDh7sP1Cw2mgxgmn6-3JsMqc5zEQfE8dkxOY1KKMUOI3ACFKRJpSW2AAp7ontYIaxI6i7XPJVwyeVfCQ550Os3jLrGSNOLgbdAy6s0PBk2TFNjEbsfq31LB0OnX407pJa5v2faRadwSW63mn5KuLyR9j2tgx3zecanl-55R_-jjPs"></script>
+
+</head>
+
+<body>
+  <div id="insegel-container">
+    <header>
+      <div id="logo-container">
+          
+          <a href="../../../index.html"><img src="../../../_static/logo_nameless_png.png"></a>
+          
+
+      </div>
+      <div id="project-container">
+        <h1>n2v Documentation</h1>
+      </div>
+    </header>
+
+    <div id="content-container">
+
+      <div id="main-content-container">
+        <div id="main-content-header">
+          <h1>n2v.methods.wuyang</h1>
+        </div>
+        <div id="main-content">
+          
+  <h1>Source code for n2v.methods.wuyang</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">wuyang.py</span>
+
+<span class="sd">Functions associated with wuyang inversion</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">opt_einsum</span> <span class="kn">import</span> <span class="n">contract</span>
+<span class="kn">from</span> <span class="nn">scipy.optimize</span> <span class="kn">import</span> <span class="n">minimize</span>
+
+<div class="viewcode-block" id="WuYang"><a class="viewcode-back" href="../../../api/n2v.WuYang.html#n2v.WuYang">[docs]</a><span class="k">class</span> <span class="nc">WuYang</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Performs Optimization as in: 10.1063/1.1535422 - Qin Wu + Weitao Yang</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">    -----------</span>
+<span class="sd">    lambda_rgl: {None, float}. If float, lambda-regularization is added with lambda=lambda_rgl.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">regul_norm</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># Regularization norm: ||v||^2</span>
+    <span class="n">lambda_reg</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># Regularization constant</span>
+
+<div class="viewcode-block" id="WuYang.wuyang"><a class="viewcode-back" href="../../../api/n2v.WuYang.html#n2v.WuYang.wuyang">[docs]</a>    <span class="k">def</span> <span class="nf">wuyang</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">opt_max_iter</span><span class="p">,</span> <span class="n">reg</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="mf">1e-7</span><span class="p">,</span> <span class="n">gtol</span><span class="o">=</span><span class="mf">1e-3</span><span class="p">,</span>
+               <span class="n">opt_method</span><span class="o">=</span><span class="s1">&#39;trust-krylov&#39;</span><span class="p">,</span> <span class="n">opt</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Calls scipy minimizer to minimize lagrangian. </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lambda_reg</span> <span class="o">=</span> <span class="n">reg</span>
+        <span class="k">if</span> <span class="n">opt</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">opt</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;disp&quot;</span>    <span class="p">:</span> <span class="kc">False</span><span class="p">}</span>
+        <span class="n">opt</span><span class="p">[</span><span class="s1">&#39;maxiter&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">opt_max_iter</span>
+        <span class="n">opt</span><span class="p">[</span><span class="s1">&#39;gtol&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">gtol</span>
+        <span class="c1"># Initialization for D and C</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_diagonalize_with_potential_pbs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">v_pbs</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">opt_method</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s1">&#39;bfgs&#39;</span> <span class="ow">or</span> <span class="n">opt_method</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s1">&#39;l-bfgs-b&#39;</span><span class="p">:</span>
+            <span class="n">opt_results</span> <span class="o">=</span> <span class="n">minimize</span><span class="p">(</span> <span class="n">fun</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">lagrangian_wy</span><span class="p">,</span>
+                                    <span class="n">x0</span>  <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">v_pbs</span><span class="p">,</span>
+                                    <span class="n">jac</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">gradient_wy</span><span class="p">,</span>
+                                    <span class="n">method</span>  <span class="o">=</span> <span class="n">opt_method</span><span class="p">,</span>
+                                    <span class="n">tol</span>     <span class="o">=</span> <span class="n">tol</span><span class="p">,</span>
+                                    <span class="n">options</span> <span class="o">=</span> <span class="n">opt</span>
+                                    <span class="p">)</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">opt_results</span> <span class="o">=</span> <span class="n">minimize</span><span class="p">(</span> <span class="n">fun</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">lagrangian_wy</span><span class="p">,</span>
+                                    <span class="n">x0</span>  <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">v_pbs</span><span class="p">,</span>
+                                    <span class="n">jac</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">gradient_wy</span><span class="p">,</span>
+                                    <span class="n">hess</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">hessian_wy</span><span class="p">,</span>
+                                    <span class="n">method</span> <span class="o">=</span> <span class="n">opt_method</span><span class="p">,</span>
+                                    <span class="n">tol</span>    <span class="o">=</span> <span class="n">tol</span><span class="p">,</span>
+                                    <span class="n">options</span> <span class="o">=</span> <span class="n">opt</span>
+                                    <span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">opt_results</span><span class="o">.</span><span class="n">success</span> <span class="o">==</span> <span class="kc">False</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">v_pbs</span> <span class="o">=</span> <span class="n">opt_results</span><span class="o">.</span><span class="n">x</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">opt_info</span> <span class="o">=</span> <span class="n">opt_results</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Optimization was unsucessful (|grad|=</span><span class="si">%.2e</span><span class="s2">) within </span><span class="si">%i</span><span class="s2"> iterations, &quot;</span>
+                             <span class="s2">&quot;try a different initial guess. </span><span class="si">%s</span><span class="s2">&quot;</span><span class="o">%</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">opt_results</span><span class="o">.</span><span class="n">jac</span><span class="p">),</span> <span class="n">opt_results</span><span class="o">.</span><span class="n">nit</span><span class="p">,</span> <span class="n">opt_results</span><span class="o">.</span><span class="n">message</span><span class="p">)</span>
+                             <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Optimization Successful within </span><span class="si">%i</span><span class="s2"> iterations! &quot;</span>
+                  <span class="s2">&quot;|grad|=</span><span class="si">%.2e</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">opt_results</span><span class="o">.</span><span class="n">nit</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">opt_results</span><span class="o">.</span><span class="n">jac</span><span class="p">)))</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">v_pbs</span> <span class="o">=</span> <span class="n">opt_results</span><span class="o">.</span><span class="n">x</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">opt_info</span> <span class="o">=</span> <span class="n">opt_results</span></div>
+
+    <span class="k">def</span> <span class="nf">_diagonalize_with_potential_pbs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">v</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Diagonalize Fock matrix with additional external potential</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">v_pbs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+        <span class="n">vks_a</span> <span class="o">=</span> <span class="n">contract</span><span class="p">(</span><span class="s2">&quot;ijk,k-&gt;ij&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">S3</span><span class="p">,</span> <span class="n">v</span><span class="p">[:</span><span class="bp">self</span><span class="o">.</span><span class="n">npbs</span><span class="p">])</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">va</span>
+        <span class="n">fock_a</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">V</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">T</span> <span class="o">+</span> <span class="n">vks_a</span> 
+        <span class="bp">self</span><span class="o">.</span><span class="n">Ca</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">Coca</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">Da</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">eigvecs_a</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">diagonalize</span><span class="p">(</span> <span class="n">fock_a</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">nalpha</span> <span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">ref</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">Cb</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">Cocb</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">Db</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">eigvecs_b</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">Ca</span><span class="o">.</span><span class="n">copy</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">Coca</span><span class="o">.</span><span class="n">copy</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">Da</span><span class="o">.</span><span class="n">copy</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">eigvecs_a</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">Fock</span> <span class="o">=</span>  <span class="n">fock_a</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">vks_b</span> <span class="o">=</span> <span class="n">contract</span><span class="p">(</span><span class="s2">&quot;ijk,k-&gt;ij&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">S3</span><span class="p">,</span> <span class="n">v</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">npbs</span><span class="p">:])</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">vb</span>
+            <span class="n">fock_b</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">V</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">T</span> <span class="o">+</span> <span class="n">vks_b</span>        
+            <span class="bp">self</span><span class="o">.</span><span class="n">Cb</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">Cocb</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">Db</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">eigvecs_b</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">diagonalize</span><span class="p">(</span> <span class="n">fock_b</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">nbeta</span> <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">Fock</span> <span class="o">=</span>  <span class="p">(</span><span class="n">fock_a</span><span class="p">,</span> <span class="n">fock_b</span><span class="p">)</span>
+
+<div class="viewcode-block" id="WuYang.lagrangian_wy"><a class="viewcode-back" href="../../../api/n2v.WuYang.html#n2v.WuYang.lagrangian_wy">[docs]</a>    <span class="k">def</span> <span class="nf">lagrangian_wy</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">v</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Lagrangian to be minimized wrt external potential</span>
+<span class="sd">        Equation (5) of main reference</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># If v is not updated, will not re-calculate.</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">allclose</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">v_pbs</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_diagonalize_with_potential_pbs</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">grad_a</span> <span class="o">=</span> <span class="n">contract</span><span class="p">(</span><span class="s1">&#39;ij,ijt-&gt;t&#39;</span><span class="p">,</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Da</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">Dt</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="bp">self</span><span class="o">.</span><span class="n">S3</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">grad_b</span> <span class="o">=</span> <span class="n">contract</span><span class="p">(</span><span class="s1">&#39;ij,ijt-&gt;t&#39;</span><span class="p">,</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Db</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">Dt</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span> <span class="bp">self</span><span class="o">.</span><span class="n">S3</span><span class="p">)</span>
+
+        <span class="n">kinetic</span>     <span class="o">=</span>   <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">T</span> <span class="o">*</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Da</span><span class="p">))</span>
+        <span class="n">potential</span>   <span class="o">=</span>   <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">V</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">va</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Da</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">Dt</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span>
+        <span class="n">optimizing</span>  <span class="o">=</span>   <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">v</span><span class="p">[:</span><span class="bp">self</span><span class="o">.</span><span class="n">npbs</span><span class="p">]</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">grad_a</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">ref</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">L</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="p">(</span><span class="n">kinetic</span> <span class="o">+</span> <span class="n">potential</span> <span class="o">+</span> <span class="n">optimizing</span><span class="p">)</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">kinetic</span>    <span class="o">+=</span>   <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">T</span> <span class="o">*</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Db</span><span class="p">))</span>
+            <span class="n">potential</span>  <span class="o">+=</span>   <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">V</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">vb</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Db</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">Dt</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
+            <span class="n">optimizing</span> <span class="o">+=</span>   <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">v</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">npbs</span><span class="p">:]</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">grad_b</span><span class="p">)</span>
+            <span class="n">L</span> <span class="o">=</span> <span class="n">kinetic</span> <span class="o">+</span> <span class="n">potential</span> <span class="o">+</span> <span class="n">optimizing</span>
+
+        <span class="c1"># Add lambda-regularization</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">lambda_reg</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">T</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">T_pbs</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">ref</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">norm</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="p">(</span><span class="n">v</span><span class="p">[:</span><span class="bp">self</span><span class="o">.</span><span class="n">npbs</span><span class="p">]</span> <span class="o">@</span> <span class="n">T</span> <span class="o">@</span> <span class="n">v</span><span class="p">[:</span><span class="bp">self</span><span class="o">.</span><span class="n">npbs</span><span class="p">])</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">norm</span> <span class="o">=</span> <span class="p">(</span><span class="n">v</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">npbs</span><span class="p">:]</span> <span class="o">@</span> <span class="n">T</span> <span class="o">@</span> <span class="n">v</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">npbs</span><span class="p">:])</span> <span class="o">+</span> <span class="p">(</span><span class="n">v</span><span class="p">[:</span><span class="bp">self</span><span class="o">.</span><span class="n">npbs</span><span class="p">]</span> <span class="o">@</span> <span class="n">T</span> <span class="o">@</span> <span class="n">v</span><span class="p">[:</span><span class="bp">self</span><span class="o">.</span><span class="n">npbs</span><span class="p">])</span>
+
+            <span class="n">L</span> <span class="o">-=</span> <span class="n">norm</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">lambda_reg</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">regul_norm</span> <span class="o">=</span> <span class="n">norm</span>
+
+        <span class="c1"># if print_flag:</span>
+        <span class="c1">#    print(f&quot;Kinetic: {kinetic:6.4f} | Potential: {np.abs(potential):6.4e} | From Optimization: {np.abs(optimizing):6.4e}&quot;)</span>
+
+        <span class="k">return</span> <span class="o">-</span> <span class="n">L</span></div>
+
+<div class="viewcode-block" id="WuYang.gradient_wy"><a class="viewcode-back" href="../../../api/n2v.WuYang.html#n2v.WuYang.gradient_wy">[docs]</a>    <span class="k">def</span> <span class="nf">gradient_wy</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">v</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Calculates gradient wrt target density</span>
+<span class="sd">        Equation (11) of main reference</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">allclose</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">v_pbs</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_diagonalize_with_potential_pbs</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">grad_a</span> <span class="o">=</span> <span class="n">contract</span><span class="p">(</span><span class="s1">&#39;ij,ijt-&gt;t&#39;</span><span class="p">,</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Da</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">Dt</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="bp">self</span><span class="o">.</span><span class="n">S3</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">grad_b</span> <span class="o">=</span> <span class="n">contract</span><span class="p">(</span><span class="s1">&#39;ij,ijt-&gt;t&#39;</span><span class="p">,</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Db</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">Dt</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span> <span class="bp">self</span><span class="o">.</span><span class="n">S3</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">ref</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">grad</span>   <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">grad_a</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">grad</span>   <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span> <span class="bp">self</span><span class="o">.</span><span class="n">grad_a</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">grad_b</span> <span class="p">))</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">lambda_reg</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">T</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">T_pbs</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">ref</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">rgl_vector</span> <span class="o">=</span> <span class="mi">4</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">lambda_reg</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">T</span><span class="p">,</span> <span class="n">v</span><span class="p">[:</span><span class="bp">self</span><span class="o">.</span><span class="n">npbs</span><span class="p">])</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">grad</span> <span class="o">-=</span> <span class="n">rgl_vector</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">grad</span><span class="p">[:</span><span class="bp">self</span><span class="o">.</span><span class="n">npbs</span><span class="p">]</span> <span class="o">-=</span> <span class="mi">2</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">lambda_reg</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">T</span><span class="p">,</span> <span class="n">v</span><span class="p">[:</span><span class="bp">self</span><span class="o">.</span><span class="n">npbs</span><span class="p">])</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">grad</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">npbs</span><span class="p">:]</span> <span class="o">-=</span> <span class="mi">2</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">lambda_reg</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">T</span><span class="p">,</span> <span class="n">v</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">npbs</span><span class="p">:])</span>
+
+        <span class="k">return</span> <span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">grad</span></div>
+
+<div class="viewcode-block" id="WuYang.hessian_wy"><a class="viewcode-back" href="../../../api/n2v.WuYang.html#n2v.WuYang.hessian_wy">[docs]</a>    <span class="k">def</span> <span class="nf">hessian_wy</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">v</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Calculates gradient wrt target density</span>
+<span class="sd">        Equation (13) of main reference</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">allclose</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">v_pbs</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_diagonalize_with_potential_pbs</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+
+        <span class="n">na</span><span class="p">,</span> <span class="n">nb</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">nalpha</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">nbeta</span>
+
+        <span class="n">eigs_diff_a</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">eigvecs_a</span><span class="p">[:</span><span class="n">na</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">eigvecs_a</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="n">na</span><span class="p">:]</span>
+        <span class="n">C3a</span> <span class="o">=</span> <span class="n">contract</span><span class="p">(</span><span class="s1">&#39;mi,va,mvt-&gt;iat&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">Ca</span><span class="p">[:,:</span><span class="n">na</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">Ca</span><span class="p">[:,</span><span class="n">na</span><span class="p">:],</span> <span class="bp">self</span><span class="o">.</span><span class="n">S3</span><span class="p">)</span>
+        <span class="n">Ha</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">contract</span><span class="p">(</span><span class="s1">&#39;iau,iat,ia-&gt;ut&#39;</span><span class="p">,</span> <span class="n">C3a</span><span class="p">,</span> <span class="n">C3a</span><span class="p">,</span> <span class="n">eigs_diff_a</span><span class="o">**-</span><span class="mi">1</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span> <span class="n">ref</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">lambda_reg</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">Ha</span> <span class="o">-=</span> <span class="mi">4</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">T_pbs</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">lambda_reg</span>
+            <span class="n">Hs</span> <span class="o">=</span> <span class="n">Ha</span>
+
+        <span class="k">else</span><span class="p">:</span>
+
+            <span class="n">eigs_diff_b</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">eigvecs_b</span><span class="p">[:</span><span class="n">nb</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">eigvecs_b</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="n">nb</span><span class="p">:]</span>
+            <span class="n">C3b</span> <span class="o">=</span> <span class="n">contract</span><span class="p">(</span><span class="s1">&#39;mi,va,mvt-&gt;iat&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">Cb</span><span class="p">[:,:</span><span class="n">nb</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">Cb</span><span class="p">[:,</span><span class="n">nb</span><span class="p">:],</span> <span class="bp">self</span><span class="o">.</span><span class="n">S3</span><span class="p">)</span>
+            <span class="n">Hb</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">contract</span><span class="p">(</span><span class="s1">&#39;iau,iat,ia-&gt;ut&#39;</span><span class="p">,</span> <span class="n">C3b</span><span class="p">,</span> <span class="n">C3b</span><span class="p">,</span> <span class="n">eigs_diff_b</span><span class="o">**-</span><span class="mi">1</span><span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">lambda_reg</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">Ha</span> <span class="o">-=</span> <span class="mi">2</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">T_pbs</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">lambda_reg</span>
+                <span class="n">Hb</span> <span class="o">-=</span> <span class="mi">2</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">T_pbs</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">lambda_reg</span>
+            <span class="n">Hs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">block</span><span class="p">(</span>
+                            <span class="p">[[</span><span class="n">Ha</span><span class="p">,</span>                               <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">npbs</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">npbs</span><span class="p">))],</span>
+                            <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">npbs</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">npbs</span><span class="p">)),</span> <span class="n">Hb</span>                              <span class="p">]]</span>
+                        <span class="p">)</span>
+
+        <span class="k">return</span> <span class="o">-</span> <span class="n">Hs</span></div>
+
+<div class="viewcode-block" id="WuYang.find_regularization_constant_wy"><a class="viewcode-back" href="../../../api/n2v.WuYang.html#n2v.WuYang.find_regularization_constant_wy">[docs]</a>    <span class="k">def</span> <span class="nf">find_regularization_constant_wy</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">opt_max_iter</span><span class="p">,</span> <span class="n">opt_method</span><span class="o">=</span><span class="s2">&quot;trust-krylov&quot;</span><span class="p">,</span> <span class="n">gtol</span><span class="o">=</span><span class="mf">1e-3</span><span class="p">,</span>
+                                     <span class="n">tol</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">opt</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">lambda_list</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Finding regularization constant lambda.</span>
+
+<span class="sd">        Note: it is recommend to set a specific convergence criteria by opt or tol,</span>
+<span class="sd">                in order to control the same convergence</span>
+<span class="sd">                for different lambda value.</span>
+
+<span class="sd">        After the calculation is done, one can plot the returns to select a good lambda.</span>
+
+<span class="sd">        Parameters:</span>
+<span class="sd">        -----------</span>
+<span class="sd">        opt_max_iter: int</span>
+<span class="sd">                    maximum iteration</span>
+
+<span class="sd">        opt_method: string default: &quot;trust-krylov&quot;</span>
+<span class="sd">            opt_methods available in scipy.optimize.minimize</span>
+
+<span class="sd">        tol: float</span>
+<span class="sd">            Tolerance for termination. See scipy.optimize.minimize for details.</span>
+<span class="sd">        gtol: float</span>
+<span class="sd">             gtol for scipy.optimize.minimize: the gradient norm for</span>
+<span class="sd">             convergence</span>
+<span class="sd">        opt: dictionary, optional</span>
+<span class="sd">            if given:</span>
+<span class="sd">                scipy.optimize.minimize(method=opt_method, options=opt).</span>
+<span class="sd">            Notice that opt has lower priorities than opt_max_iter and gtol.</span>
+
+<span class="sd">        lambda_list: np.ndarray, optional</span>
+<span class="sd">            A array of lambda to search; otherwise, it will be 10 ** np.linspace(-1, -7, 7).</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">        --------</span>
+<span class="sd">        lambda_list: np.ndarray</span>
+<span class="sd">            A array of lambda searched.</span>
+
+<span class="sd">        P_list: np.ndarray</span>
+<span class="sd">            The value defined by [Bulat, Heaton-Burgess, Cohen, Yang 2007] eqn (21).</span>
+<span class="sd">            Corresponding to lambda in lambda_list.</span>
+
+<span class="sd">        Ts_list: np.ndarray</span>
+<span class="sd">            The Ts value for each lambda.</span>
+
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">Ts_list</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">L_list</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">v_norm_list</span> <span class="o">=</span> <span class="p">[]</span>
+
+
+        <span class="k">if</span> <span class="n">lambda_list</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">lambda_list</span> <span class="o">=</span> <span class="mi">10</span> <span class="o">**</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="o">-</span><span class="mi">3</span><span class="p">,</span> <span class="o">-</span><span class="mi">9</span><span class="p">,</span> <span class="mi">7</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">opt</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">opt</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;disp&quot;</span>    <span class="p">:</span> <span class="kc">False</span><span class="p">}</span>
+        <span class="n">opt</span><span class="p">[</span><span class="s1">&#39;maxiter&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">opt_max_iter</span>
+        <span class="n">opt</span><span class="p">[</span><span class="s1">&#39;gtol&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">gtol</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">lambda_reg</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="c1"># Initial calculation with no regularization</span>
+        <span class="c1"># Initialization for D and C</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_diagonalize_with_potential_pbs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">v_pbs</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">opt_method</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s1">&#39;bfgs&#39;</span> <span class="ow">or</span> <span class="n">opt_method</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s1">&#39;l-bfgs-b&#39;</span><span class="p">:</span>
+            <span class="n">initial_result</span> <span class="o">=</span> <span class="n">minimize</span><span class="p">(</span><span class="n">fun</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">lagrangian_wy</span><span class="p">,</span>
+                                   <span class="n">x0</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">v_pbs</span><span class="p">,</span>
+                                   <span class="n">jac</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">gradient_wy</span><span class="p">,</span>
+                                   <span class="n">method</span><span class="o">=</span><span class="n">opt_method</span><span class="p">,</span>
+                                   <span class="n">tol</span><span class="o">=</span><span class="n">tol</span><span class="p">,</span>
+                                   <span class="n">options</span><span class="o">=</span><span class="n">opt</span>
+                                   <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">initial_result</span> <span class="o">=</span> <span class="n">minimize</span><span class="p">(</span><span class="n">fun</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">lagrangian_wy</span><span class="p">,</span>
+                                   <span class="n">x0</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">v_pbs</span><span class="p">,</span>
+                                   <span class="n">jac</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">gradient_wy</span><span class="p">,</span>
+                                   <span class="n">hess</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">hessian_wy</span><span class="p">,</span>
+                                   <span class="n">method</span><span class="o">=</span><span class="n">opt_method</span><span class="p">,</span>
+                                   <span class="n">tol</span><span class="o">=</span><span class="n">tol</span><span class="p">,</span>
+                                   <span class="n">options</span><span class="o">=</span><span class="n">opt</span>
+                                   <span class="p">)</span>
+        <span class="k">if</span> <span class="n">initial_result</span><span class="o">.</span><span class="n">success</span> <span class="o">==</span> <span class="kc">False</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Optimization was unsucessful (|grad|=</span><span class="si">%.2e</span><span class="s2">) within </span><span class="si">%i</span><span class="s2"> iterations, &quot;</span>
+                             <span class="s2">&quot;try a different intitial guess&quot;</span><span class="o">%</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">initial_result</span><span class="o">.</span><span class="n">jac</span><span class="p">),</span> <span class="n">initial_result</span><span class="o">.</span><span class="n">nit</span><span class="p">)</span>
+                             <span class="o">+</span> <span class="n">initial_result</span><span class="o">.</span><span class="n">message</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">L0</span> <span class="o">=</span> <span class="o">-</span><span class="n">initial_result</span><span class="o">.</span><span class="n">fun</span>
+            <span class="n">initial_v0</span> <span class="o">=</span> <span class="n">initial_result</span><span class="o">.</span><span class="n">x</span>  <span class="c1"># This is used as the initial guess for with regularization calculation.</span>
+
+        <span class="k">for</span> <span class="n">reg</span> <span class="ow">in</span> <span class="n">lambda_list</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">lambda_reg</span> <span class="o">=</span> <span class="n">reg</span>
+
+            <span class="k">if</span> <span class="n">opt_method</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s1">&#39;bfgs&#39;</span> <span class="ow">or</span> <span class="n">opt_method</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s1">&#39;l-bfgs-b&#39;</span><span class="p">:</span>
+                <span class="n">opt_results</span> <span class="o">=</span> <span class="n">minimize</span><span class="p">(</span><span class="n">fun</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">lagrangian_wy</span><span class="p">,</span>
+                                       <span class="n">x0</span><span class="o">=</span><span class="n">initial_v0</span><span class="p">,</span>
+                                       <span class="n">jac</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">gradient_wy</span><span class="p">,</span>
+                                       <span class="n">method</span><span class="o">=</span><span class="n">opt_method</span><span class="p">,</span>
+                                       <span class="n">tol</span><span class="o">=</span><span class="n">tol</span><span class="p">,</span>
+                                       <span class="n">options</span><span class="o">=</span><span class="n">opt</span>
+                                       <span class="p">)</span>
+
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">opt_results</span> <span class="o">=</span> <span class="n">minimize</span><span class="p">(</span><span class="n">fun</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">lagrangian_wy</span><span class="p">,</span>
+                                       <span class="n">x0</span><span class="o">=</span><span class="n">initial_v0</span><span class="p">,</span>
+                                       <span class="n">jac</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">gradient_wy</span><span class="p">,</span>
+                                       <span class="n">hess</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">hessian_wy</span><span class="p">,</span>
+                                       <span class="n">method</span><span class="o">=</span><span class="n">opt_method</span><span class="p">,</span>
+                                       <span class="n">tol</span><span class="o">=</span><span class="n">tol</span><span class="p">,</span>
+                                       <span class="n">options</span><span class="o">=</span><span class="n">opt</span>
+                                       <span class="p">)</span>
+
+
+            <span class="n">Ts_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">T</span> <span class="o">*</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Da</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">Db</span><span class="p">)))</span>
+            <span class="n">v_norm_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">regul_norm</span><span class="p">)</span>
+            <span class="n">L_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="o">-</span><span class="n">opt_results</span><span class="o">.</span><span class="n">fun</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">lambda_reg</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">regul_norm</span><span class="p">)</span>
+
+        <span class="n">P_list</span> <span class="o">=</span> <span class="n">lambda_list</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">v_norm_list</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">L0</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">L_list</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="n">lambda_list</span><span class="p">,</span> <span class="n">P_list</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">Ts_list</span><span class="p">)</span></div></div>
+</pre></div>
+
+        </div>
+      </div>
+
+      <div id="side-menu-container">
+
+        <div id="search" role="search">
+        <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+            <input type="text" name="q" placeholder="Search..." />
+            <input type="hidden" name="check_keywords" value="yes" />
+            <input type="hidden" name="area" value="default" />
+        </form>
+</div>
+
+        <div id="side-menu" role="navigation">
+
+          
+  
+    
+  
+  
+    <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api.html">API Documentation</a></li>
+</ul>
+
+  
+
+
+        </div>
+
+        
+
+      </div>
+
+    </div>
+
+<footer>
+    <div id="footer-info">
+        <ul id="build-details">
+            
+
+            
+
+            
+        </ul>
+        <div id="credit">
+            created with <a href="http://sphinx-doc.org/">Sphinx</a> and <a href="https://github.com/Autophagy/insegel">Insegel</a>
+
+        </div>
+    </div>
+
+    <a id="menu-toggle" class="fa fa-bars" aria-hidden="true"></a>
+
+    <script type="text/javascript">
+      $("#menu-toggle").click(function() {
+        $("#menu-toggle").toggleClass("toggled");
+        $("#side-menu-container").slideToggle(300);
+      });
+    </script>
+
+</footer> 
+
+</div>
+
+</body>
+</html>

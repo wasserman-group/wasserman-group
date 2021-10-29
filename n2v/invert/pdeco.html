@@ -1,0 +1,238 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>PDE Constrained Optimization &mdash; n2v  documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/graphviz.css" type="text/css" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Modified Ryabinkin-Kohut-Staroverov" href="mrks.html" />
+    <link rel="prev" title="Ou and Carter" href="ou_carter.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> n2v
+          
+
+          
+            
+            <img src="../_static/logo_nameless_png.png" class="logo" alt="Logo"/>
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../install.html"><strong>Installation</strong></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../first_steps.html"><strong>First Steps</strong></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../on_the_grid.html"><strong>On the Grid</strong></a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../invert.html"><strong>Inverting A Density</strong></a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="direct.html">Direct</a></li>
+<li class="toctree-l2"><a class="reference internal" href="zmp.html">ZMP</a></li>
+<li class="toctree-l2"><a class="reference internal" href="wu_yang.html">Wu Yang</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ou_carter.html">Ou and Carter</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">PDE Constrained Optimization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="mrks.html">Modified Ryabinkin-Kohut-Staroverov</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">n2v</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../invert.html"><strong>Inverting A Density</strong></a> &raquo;</li>
+        
+      <li>PDE Constrained Optimization</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../_sources/invert/pdeco.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="pde-constrained-optimization">
+<h1>PDE Constrained Optimization<a class="headerlink" href="#pde-constrained-optimization" title="Permalink to this headline">¶</a></h1>
+<p>Taking a similar approach as the Wu and Yang method, the PDE-Constrained Optimization (PDECO) method,
+is refined by defining a density error so that the Lagrangian is optimized under several constraints.</p>
+<p>More information on this methodology can be found at:</p>
+<p>Jensen, Daniel S., and Adam Wasserman.
+“Numerical methods for the inverse problem of density functional theory.”
+International Journal of Quantum Chemistry 118.1 (2018): e25425.</p>
+<p>and</p>
+<p>Kanungo, Bikash, Paul M. Zimmerman, and Vikram Gavini.
+“Exact exchange-correlation potentials from ground-state electron densities.”
+Nature communications 10.1 (2019): 1-9.</p>
+<p>The lagrangian is defined as:</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}&amp;L[v_{KS}, \{\psi_i\}, \{\epsilon_i\}, \{p_i\}, \{\mu_i\}]\\
+=&amp; \int(n(\mathbf{r})-n_{in}(\mathbf{r}))^w d\mathbf{r} \\
+&amp; + \sum_{i=1}^{N/2}\int p_i(\mathbf{r})(-\frac{1}{2}\nabla^2+v_{KS}(\mathbf{r}) - \epsilon_i)\psi_i(\mathbf{r})\mathbf{dr}\\
+&amp;+\sum_{i=1}^{N/2}\mu_i(\int|\psi_i(\mathbf{r})|^2\mathbf{dr}-1),\end{split}\]</div>
+<p>Where the set of p’s and mu’s are langange multipliers for the constraints.
+And a similar procedure to the Wu Yang method is followed to generate the gradient and hessians to optimize the lagrangian.</p>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="mrks.html" class="btn btn-neutral float-right" title="Modified Ryabinkin-Kohut-Staroverov" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="ou_carter.html" class="btn btn-neutral float-left" title="Ou and Carter" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2020, Wasserman Group.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

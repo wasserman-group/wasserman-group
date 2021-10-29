@@ -1,0 +1,500 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Grider &mdash; n2v  documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/graphviz.css" type="text/css" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> n2v
+          
+
+          
+            
+            <img src="../_static/logo_nameless_png.png" class="logo" alt="Logo"/>
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../install.html"><strong>Installation</strong></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../first_steps.html"><strong>First Steps</strong></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../on_the_grid.html"><strong>On the Grid</strong></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../invert.html"><strong>Inverting A Density</strong></a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">n2v</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+      <li>Grider</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../_sources/api/n2v.Grider.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="grider">
+<h1>Grider<a class="headerlink" href="#grider" title="Permalink to this headline">¶</a></h1>
+<dl class="py class">
+<dt id="n2v.Grider">
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">n2v.</span></code><code class="sig-name descname"><span class="pre">Grider</span></code><a class="reference internal" href="../_modules/n2v/grid/grider.html#Grider"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#n2v.Grider" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">n2v.grid.cubeprop.Cubeprop</span></code></p>
+<p class="rubric">Methods Summary</p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#n2v.Grider.dft_grid_to_fock" title="n2v.Grider.dft_grid_to_fock"><code class="xref py py-obj docutils literal notranslate"><span class="pre">dft_grid_to_fock</span></code></a>(value, Vpot)</p></td>
+<td><p>For value on DFT spherical grid, Fock matrix is returned.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#n2v.Grider.generate_dft_grid" title="n2v.Grider.generate_dft_grid"><code class="xref py py-obj docutils literal notranslate"><span class="pre">generate_dft_grid</span></code></a>(Vpot)</p></td>
+<td><p>Extracts DFT spherical grid and weights from wfn object</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#n2v.Grider.generate_grids" title="n2v.Grider.generate_grids"><code class="xref py py-obj docutils literal notranslate"><span class="pre">generate_grids</span></code></a>(x, y, z)</p></td>
+<td><p>Genrates Mesh from 3 separate linear spaces and flatten, needed for cubic grid.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#n2v.Grider.get_basis_set_correction" title="n2v.Grider.get_basis_set_correction"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_basis_set_correction</span></code></a>(grid)</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#n2v.Grider.grid_to_blocks" title="n2v.Grider.grid_to_blocks"><code class="xref py py-obj docutils literal notranslate"><span class="pre">grid_to_blocks</span></code></a>(grid[, basis])</p></td>
+<td><p>Generate list of blocks to allocate given grid</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#n2v.Grider.on_grid_ao" title="n2v.Grider.on_grid_ao"><code class="xref py py-obj docutils literal notranslate"><span class="pre">on_grid_ao</span></code></a>(coeff[, grid, basis, Vpot])</p></td>
+<td><p>Generates a quantity on the grid given its ao representation. <a href="#id1"><span class="problematic" id="id2">*</span></a>This is the most general function for basis to grid transformation.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#n2v.Grider.on_grid_density" title="n2v.Grider.on_grid_density"><code class="xref py py-obj docutils literal notranslate"><span class="pre">on_grid_density</span></code></a>([grid, Da, Db, Vpot])</p></td>
+<td><p>Generates Density given grid</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#n2v.Grider.on_grid_esp" title="n2v.Grider.on_grid_esp"><code class="xref py py-obj docutils literal notranslate"><span class="pre">on_grid_esp</span></code></a>([Da, Db, grid, Vpot, wfn])</p></td>
+<td><p>Generates EXTERNAL/ESP/HARTREE and Fermi Amaldi Potential on given grid</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#n2v.Grider.on_grid_grad_phi" title="n2v.Grider.on_grid_grad_phi"><code class="xref py py-obj docutils literal notranslate"><span class="pre">on_grid_grad_phi</span></code></a>([Ca, Cb, grid, Vpot])</p></td>
+<td><p>Generates laplacian of molecular orbitals</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#n2v.Grider.on_grid_lap_phi" title="n2v.Grider.on_grid_lap_phi"><code class="xref py py-obj docutils literal notranslate"><span class="pre">on_grid_lap_phi</span></code></a>([Ca, Cb, grid, Vpot])</p></td>
+<td><p>Generates laplacian of molecular orbitals</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#n2v.Grider.on_grid_orbitals" title="n2v.Grider.on_grid_orbitals"><code class="xref py py-obj docutils literal notranslate"><span class="pre">on_grid_orbitals</span></code></a>([Ca, Cb, grid, Vpot])</p></td>
+<td><p>Generates orbitals given grid</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#n2v.Grider.on_grid_vxc" title="n2v.Grider.on_grid_vxc"><code class="xref py py-obj docutils literal notranslate"><span class="pre">on_grid_vxc</span></code></a>([func_id, grid, Da, Db, Vpot])</p></td>
+<td><p>Generates Vxc given grid</p></td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Methods Documentation</p>
+<dl class="py method">
+<dt id="n2v.Grider.dft_grid_to_fock">
+<code class="sig-name descname"><span class="pre">dft_grid_to_fock</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Vpot</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/n2v/grid/grider.html#Grider.dft_grid_to_fock"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#n2v.Grider.dft_grid_to_fock" title="Permalink to this definition">¶</a></dt>
+<dd><p>For value on DFT spherical grid, Fock matrix is returned.
+VFock_ij = int dx phi_i(x) phi_j(x) value(x)</p>
+<p>value: np.ndarray of shape (npoint, ).</p>
+<dl class="simple">
+<dt>Vpot:psi4.core.VBase</dt><dd><p>Vpotential object with info about grid.
+Provides DFT spherical grid. Only comes to play if no grid is given.</p>
+</dd>
+</dl>
+<p>VFock: np.ndarray of shape (nbasis, nbasis)</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="n2v.Grider.generate_dft_grid">
+<code class="sig-name descname"><span class="pre">generate_dft_grid</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Vpot</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/n2v/grid/grider.html#Grider.generate_dft_grid"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#n2v.Grider.generate_dft_grid" title="Permalink to this definition">¶</a></dt>
+<dd><p>Extracts DFT spherical grid and weights from wfn object</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>Vpot</strong> (<em>psi4.core.VBase</em>) – Vpot object with dft grid data</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>dft_grid</strong> – Numpy arrays corresponding to x,y,z, and w.
+Shape: (4, npoints)</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>list</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="n2v.Grider.generate_grids">
+<code class="sig-name descname"><span class="pre">generate_grids</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">z</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/n2v/grid/grider.html#Grider.generate_grids"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#n2v.Grider.generate_grids" title="Permalink to this definition">¶</a></dt>
+<dd><p>Genrates Mesh from 3 separate linear spaces and flatten,
+needed for cubic grid.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>grid</strong> (<em>tuple of three np.ndarray</em>) – (x, y, z)</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>grid</strong> – shape (3, len(x)*len(y)*len(z)).</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="n2v.Grider.get_basis_set_correction">
+<code class="sig-name descname"><span class="pre">get_basis_set_correction</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">grid</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/n2v/grid/grider.html#Grider.get_basis_set_correction"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#n2v.Grider.get_basis_set_correction" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="n2v.Grider.grid_to_blocks">
+<code class="sig-name descname"><span class="pre">grid_to_blocks</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">grid</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">basis</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/n2v/grid/grider.html#Grider.grid_to_blocks"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#n2v.Grider.grid_to_blocks" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate list of blocks to allocate given grid</p>
+<dl class="field-list">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul>
+<li><p><strong>grid</strong> (<em>np.ndarray</em>) – Grid to be distributed into blocks
+Size: (3, npoints) for homogeneous grid</p>
+<blockquote>
+<div><p>(4, npoints) for inhomogenous grid to account for weights</p>
+</div></blockquote>
+</li>
+<li><p><strong>basis</strong> (<em>psi4.core.BasisSet; optional</em>) – The basis set. If not given, it will use target wfn.basisset().</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><strong>blocks</strong> (<em>list</em>) – List with psi4.core.BlockOPoints</p></li>
+<li><p><strong>npoints</strong> (<em>int</em>) – Total number of points (for one dimension)</p></li>
+<li><p><strong>points</strong> (<em>psi4.core.{RKS, UKS}</em>) – Points function to set matrices.</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="n2v.Grider.on_grid_ao">
+<code class="sig-name descname"><span class="pre">on_grid_ao</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">coeff</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">grid</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">basis</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Vpot</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/n2v/grid/grider.html#Grider.on_grid_ao"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#n2v.Grider.on_grid_ao" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generates a quantity on the grid given its ao representation.
+<a href="#id3"><span class="problematic" id="id4">*</span></a>This is the most general function for basis to grid transformation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>coeff</strong> (<em>np.ndarray</em>) – Vector/Matrix of quantity on ao basis. Shape: {(num_ao_basis, ), (num_ao_basis, num_ao_basis)}</p></li>
+<li><p><strong>grid</strong> (<em>np.ndarray Shape: (3, npoints) or (4, npoints) or tuple for block_handler (return of grid_to_blocks)</em>) – grid where density will be computed.</p></li>
+<li><p><strong>basis</strong> (<em>psi4.core.BasisSet, optional</em>) – The basis set. If not given it will use target wfn.basisset().</p></li>
+<li><p><strong>Vpot</strong> (<em>psi4.core.VBase</em>) – Vpotential object with info about grid.
+Provides DFT spherical grid. Only comes to play if no grid is given.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>coeff_r</strong> – Quantity expressed by the coefficient on the given grid</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>np.ndarray Shape: (npoints, )</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="n2v.Grider.on_grid_density">
+<code class="sig-name descname"><span class="pre">on_grid_density</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">grid</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Da</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Db</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Vpot</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/n2v/grid/grider.html#Grider.on_grid_density"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#n2v.Grider.on_grid_density" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generates Density given grid</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>Da, Db</strong> (<em>np.ndarray</em>) – Alpha, Beta densities. Shape: (num_ao_basis, num_ao_basis)</p></li>
+<li><p><strong>grid</strong> (<em>np.ndarray Shape: (3, npoints) or (4, npoints) or tuple for block_handler (return of grid_to_blocks)</em>) – grid where density will be computed.</p></li>
+<li><p><strong>Vpot</strong> (<em>psi4.core.VBase</em>) – Vpotential object with info about grid.
+Provides DFT spherical grid. Only comes to play if no grid is given.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>density</strong> – Density on the given grid.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>np.ndarray Shape: (ref, npoints)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="n2v.Grider.on_grid_esp">
+<code class="sig-name descname"><span class="pre">on_grid_esp</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Da</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Db</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">grid</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Vpot</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wfn</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/n2v/grid/grider.html#Grider.on_grid_esp"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#n2v.Grider.on_grid_esp" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generates EXTERNAL/ESP/HARTREE and Fermi Amaldi Potential on given grid</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>Da,Db</strong> (<em>np.ndarray, opt, shape (nbf, nbf)</em>) – The electron density in the denominator of Hartee potential. If None, the original density matrix
+will be used.</p></li>
+<li><p><strong>grid</strong> (<em>np.ndarray Shape: (3, npoints) or (4, npoints) or tuple for block_handler (return of grid_to_blocks)</em>) – grid where density will be computed.</p></li>
+<li><p><strong>Vpot</strong> (<em>psi4.core.VBase</em>) – Vpotential object with info about grid.
+Provides DFT spherical grid. Only comes to play if no grid is given.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>vext, hartree, esp, v_fa</strong> – External, Hartree, ESP, and Fermi Amaldi potential on the given grid
+Shape: (npoints, )</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="n2v.Grider.on_grid_grad_phi">
+<code class="sig-name descname"><span class="pre">on_grid_grad_phi</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Ca</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Cb</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">grid</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Vpot</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/n2v/grid/grider.html#Grider.on_grid_grad_phi"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#n2v.Grider.on_grid_grad_phi" title="Permalink to this definition">¶</a></dt>
+<dd><blockquote>
+<div><p>Generates laplacian of molecular orbitals</p>
+</div></blockquote>
+<dl>
+<dt>Ca, Cb: np.ndarray</dt><dd><blockquote>
+<div><p>Alpha, Beta Orbital Coefficient Matrix. Shape: (num_ao_basis, num_ao_basis)</p>
+</div></blockquote>
+<dl class="simple">
+<dt>grid: np.ndarray Shape: (3, npoints) or (4, npoints) or tuple for block_handler (return of grid_to_blocks)</dt><dd><p>grid where density will be computed.</p>
+</dd>
+<dt>Vpot: psi4.core.VBase</dt><dd><p>Vpotential object with info about grid.
+Provides DFT spherical grid. Only comes to play if no grid is given.</p>
+</dd>
+</dl>
+<dl class="simple">
+<dt>grad_phi: List[np.ndarray]. Where array is of shape (npoints, ref)</dt><dd><p>Gradient of molecular orbitals on the grid</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="n2v.Grider.on_grid_lap_phi">
+<code class="sig-name descname"><span class="pre">on_grid_lap_phi</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Ca</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Cb</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">grid</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Vpot</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/n2v/grid/grider.html#Grider.on_grid_lap_phi"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#n2v.Grider.on_grid_lap_phi" title="Permalink to this definition">¶</a></dt>
+<dd><blockquote>
+<div><p>Generates laplacian of molecular orbitals</p>
+</div></blockquote>
+<dl>
+<dt>Ca, Cb: np.ndarray</dt><dd><blockquote>
+<div><p>Alpha, Beta Orbital Coefficient Matrix. Shape: (num_ao_basis, num_ao_basis)</p>
+</div></blockquote>
+<dl class="simple">
+<dt>grid: np.ndarray Shape: (3, npoints) or (4, npoints) or tuple for block_handler (return of grid_to_blocks)</dt><dd><p>grid where density will be computed.</p>
+</dd>
+<dt>Vpot: psi4.core.VBase</dt><dd><p>Vpotential object with info about grid.
+Provides DFT spherical grid. Only comes to play if no grid is given.</p>
+</dd>
+</dl>
+<dl class="simple">
+<dt>lap_phi: List[np.ndarray]. Where array is of shape (npoints, ref)</dt><dd><p>Laplacian of molecular orbitals on the grid</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="n2v.Grider.on_grid_orbitals">
+<code class="sig-name descname"><span class="pre">on_grid_orbitals</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Ca</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Cb</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">grid</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Vpot</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/n2v/grid/grider.html#Grider.on_grid_orbitals"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#n2v.Grider.on_grid_orbitals" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generates orbitals given grid</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>Ca, Cb</strong> (<em>np.ndarray</em>) – Alpha, Beta Orbital Coefficient Matrix. Shape: (num_ao_basis, num_ao_basis)</p></li>
+<li><p><strong>grid</strong> (<em>np.ndarray Shape: (3, npoints) or (4, npoints) or tuple for block_handler (return of grid_to_blocks)</em>) – grid where density will be computed</p></li>
+<li><p><strong>Vpot</strong> (<em>psi4.core.VBase</em>) – Vpotential object with info about grid.
+Provides DFT spherical grid. Only comes to play if no grid is given.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>orbitals</strong> – Orbitals on the given grid of size .
+Shape: (nbasis, npoints, ref)</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="n2v.Grider.on_grid_vxc">
+<code class="sig-name descname"><span class="pre">on_grid_vxc</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">func_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">grid</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Da</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Db</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Vpot</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/n2v/grid/grider.html#Grider.on_grid_vxc"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#n2v.Grider.on_grid_vxc" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generates Vxc given grid</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>Da, Db</strong> (<em>np.ndarray</em>) – Alpha, Beta densities. Shape: (num_ao_basis, num_ao_basis)</p></li>
+<li><p><strong>func_id</strong> (<em>int</em>) – Functional ID associated with Density Functional Approximationl.
+Full list of functionals: <a class="reference external" href="https://www.tddft.org/programs/libxc/functionals/">https://www.tddft.org/programs/libxc/functionals/</a></p></li>
+<li><p><strong>grid</strong> (<em>np.ndarray Shape: (3, npoints) or (4, npoints) or tuple for block_handler (return of grid_to_blocks)</em>) – grid where density will be computed.</p></li>
+<li><p><strong>Vpot</strong> (<em>psi4.core.VBase</em>) – Vpotential object with info about grid.
+Provides DFT spherical grid. Only comes to play if no grid is given.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>VXC</strong> – Exchange correlation potential on the given grid
+Shape: (npoints, )</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2020, Wasserman Group.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

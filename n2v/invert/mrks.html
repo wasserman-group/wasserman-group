@@ -1,0 +1,261 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Modified Ryabinkin-Kohut-Staroverov &mdash; n2v  documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/graphviz.css" type="text/css" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="prev" title="PDE Constrained Optimization" href="pdeco.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> n2v
+          
+
+          
+            
+            <img src="../_static/logo_nameless_png.png" class="logo" alt="Logo"/>
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../install.html"><strong>Installation</strong></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../first_steps.html"><strong>First Steps</strong></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../on_the_grid.html"><strong>On the Grid</strong></a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../invert.html"><strong>Inverting A Density</strong></a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="direct.html">Direct</a></li>
+<li class="toctree-l2"><a class="reference internal" href="zmp.html">ZMP</a></li>
+<li class="toctree-l2"><a class="reference internal" href="wu_yang.html">Wu Yang</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ou_carter.html">Ou and Carter</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pdeco.html">PDE Constrained Optimization</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Modified Ryabinkin-Kohut-Staroverov</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">n2v</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../invert.html"><strong>Inverting A Density</strong></a> &raquo;</li>
+        
+      <li>Modified Ryabinkin-Kohut-Staroverov</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../_sources/invert/mrks.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="modified-ryabinkin-kohut-staroverov">
+<h1>Modified Ryabinkin-Kohut-Staroverov<a class="headerlink" href="#modified-ryabinkin-kohut-staroverov" title="Permalink to this headline">¶</a></h1>
+<p>The modified Ryabinkin-Kohut-Staroverov (mRKS) method is an accurate method that makes use of the one and two-electron reduced density matrices.</p>
+<p>The full method’s description can be found:
+Ospadov, Egor, Ilya G. Ryabinkin, and Viktor N. Staroverov.
+“Improved method for generating exchange-correlation potentials from electronic wave functions.”
+The Journal of chemical physics 146.8 (2017): 084103.</p>
+<p>The exchange-correlation potential is found self-consistently through the equation:</p>
+<div class="math notranslate nohighlight">
+\[v_{xc}(\mathbf{r})=v_{xc}^{hole}(\mathbf{r}) + \bar{\epsilon}^{KS}(\mathbf{r}) - \bar{\epsilon}^{WF}(\mathbf{r}) + \frac{\tau^{WF}_P(\mathbf{r})}{n^{WF}(\mathbf{r})} - \frac{\tau^{KS}_P(\mathbf{r})}{n^{KS}(\mathbf{r})}.\]</div>
+<p>Where each of the components is defined as:</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}&amp;v_{xc}^{hole}(\mathbf{r})=\int d\mathbf{r}_2 \frac{n_{xc}(\mathbf{r}, \mathbf{r}_2)}{|\mathbf{r}-\mathbf{r}_2|},\label{equ:mRKSComponent_a}\\
+&amp;\bar{\epsilon}^{KS}(\mathbf{r})=\frac{2}{n^{KS}(\mathbf{r})}\sum_{i=1}^{N/2}\epsilon_i|\psi_i(\mathbf{r})|^2,\label{equ:mRKSComponent_b}\\
+&amp;\bar{\epsilon}^{WF}(\mathbf{r})=\frac{2}{n^{WF}(\mathbf{r})}\sum_{k=1}^{M}\lambda_k|f_k(\mathbf{r})|^2,\label{equ:mRKSComponent_c}\\
+&amp;\tau^{WF}_P(\mathbf{r}) = \frac{2}{n^{WF}(\mathbf{r})}\sum_{k&lt;l}^{M}n_kn_l|\chi_k(\mathbf{r})\nabla\chi_l(\mathbf{r}) - \chi_l(\mathbf{r})\nabla\chi_k(\mathbf{r})|^2,\label{equ:mRKSComponent_d}\\
+&amp;\tau^{KS}_P(\mathbf{r}) = \frac{2}{n^{KS}(\mathbf{r})}\sum_{i&lt;j}^{M}n_in_j|\psi_i(\mathbf{r})\nabla\psi_j(\mathbf{r}) - \psi_j(\mathbf{r})\nabla\psi_i(\mathbf{r})|^2,\label{equ:mRKSComponent_e}\end{split}\]</div>
+<p>And</p>
+<div class="math notranslate nohighlight">
+\[n_{xc}(\mathbf{r}, \mathbf{r}_2) = \frac{\Gamma(\mathbf{r},\mathbf{r}_2;\mathbf{r},\mathbf{r}_2)}{n(\mathbf{r})} - n(\mathbf{r}_2),\]</div>
+<p>Let us now try to invert a Neon atom’s density.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">Ne</span> <span class="o">=</span> <span class="n">psi4</span><span class="o">.</span><span class="n">geometry</span><span class="p">(</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">0 1</span>
+<span class="sd">Ne</span>
+<span class="sd">noreorient</span>
+<span class="sd">nocom</span>
+<span class="sd">units bohr</span>
+<span class="sd">symmetry c1</span>
+<span class="sd">&quot;&quot;&quot;</span> <span class="p">)</span>
+
+<span class="n">psi4</span><span class="o">.</span><span class="n">set_options</span><span class="p">({</span><span class="s2">&quot;reference&quot;</span> <span class="p">:</span> <span class="s2">&quot;rhf&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;opdm&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+                <span class="s2">&quot;tpdm&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+                <span class="s1">&#39;DFT_SPHERICAL_POINTS&#39;</span><span class="p">:</span> <span class="mi">50</span><span class="p">,</span>  <span class="c1"># Usually specify the DFT spherical grid is highly recommended.</span>
+                <span class="s1">&#39;DFT_RADIAL_POINTS&#39;</span><span class="p">:</span> <span class="mi">50</span><span class="p">,</span>  <span class="c1"># See [https://psicode.org/psi4manual/master/dft.html] for options.</span>
+                <span class="p">})</span>  <span class="c1"># Spin-Restricted</span>
+
+<span class="c1"># IMPORTANT NOTE: ONLY psi4.CIWavefunction or RHF is supported.</span>
+<span class="n">wfn</span> <span class="o">=</span> <span class="n">psi4</span><span class="o">.</span><span class="n">properties</span><span class="p">(</span><span class="s2">&quot;detci/cc-pcvdz&quot;</span><span class="p">,</span> <span class="n">return_wfn</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">molecule</span><span class="o">=</span><span class="n">Ne</span><span class="p">,</span> <span class="n">properties</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;dipole&quot;</span><span class="p">])[</span><span class="mi">1</span><span class="p">]</span>
+
+<span class="n">ine</span> <span class="o">=</span> <span class="n">n2v</span><span class="o">.</span><span class="n">Inverter</span><span class="p">(</span><span class="n">wfn</span><span class="p">)</span>
+
+<span class="n">ine</span><span class="o">.</span><span class="n">invert</span><span class="p">(</span><span class="s2">&quot;mRKS&quot;</span><span class="p">,</span> <span class="n">opt_max_iter</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">frac_old</span><span class="o">=</span><span class="mf">0.8</span><span class="p">,</span> <span class="n">init</span><span class="o">=</span><span class="s2">&quot;scan&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+      
+        <a href="pdeco.html" class="btn btn-neutral float-left" title="PDE Constrained Optimization" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2020, Wasserman Group.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

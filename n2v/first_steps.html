@@ -1,0 +1,251 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>First Steps &mdash; n2v  documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/graphviz.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="On the Grid" href="on_the_grid.html" />
+    <link rel="prev" title="Installation" href="install.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home"> n2v
+          
+
+          
+            
+            <img src="_static/logo_nameless_png.png" class="logo" alt="Logo"/>
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="install.html"><strong>Installation</strong></a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#"><strong>First Steps</strong></a></li>
+<li class="toctree-l1"><a class="reference internal" href="on_the_grid.html"><strong>On the Grid</strong></a></li>
+<li class="toctree-l1"><a class="reference internal" href="invert.html"><strong>Inverting A Density</strong></a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">n2v</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li><strong>First Steps</strong></li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/first_steps.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="first-steps">
+<h1><strong>First Steps</strong><a class="headerlink" href="#first-steps" title="Permalink to this headline">¶</a></h1>
+<p>This page details how to get started with <em>n2v</em>.</p>
+<p><em>n2v</em> allows you to perform density-to-potential inversions.
+By default, we interface our package with the package Psi4. It is a good idea
+to become familiarized with it and it’s python interface.</p>
+<p>The first need we need to make a calculation is to obtain a target density. Let
+us do this in Psi4 for the Neon atom.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">n2v</span>
+<span class="kn">import</span> <span class="nn">psi4</span>
+
+<span class="c1"># Define psi4 geometry. Symmetry needs to be set to C1.</span>
+<span class="n">Ne</span> <span class="o">=</span> <span class="n">psi4</span><span class="o">.</span><span class="n">geometry</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">0 1</span>
+<span class="s2">Ne</span>
+<span class="s2">units bohr</span>
+<span class="s2">symmetry c1</span>
+<span class="s2">&quot;&quot;&quot;</span><span class="p">)</span>
+
+<span class="c1"># n2v uses psi4&#39;s reference option to select restricted or unrestricted calculation.</span>
+<span class="n">psi4</span><span class="o">.</span><span class="n">set_options</span><span class="p">({</span><span class="s2">&quot;reference&quot;</span> <span class="p">:</span> <span class="s2">&quot;rhf&quot;</span><span class="p">})</span>
+
+<span class="c1"># storing the JK object (coulomb/exchange matrices) will save additional time.</span>
+<span class="n">psi4</span><span class="o">.</span><span class="n">set_options</span><span class="p">({</span><span class="s2">&quot;save_jk&quot;</span> <span class="p">:</span> <span class="kc">True</span><span class="p">})</span>
+
+<span class="c1"># - Perform a calculation for a target density.</span>
+<span class="c1"># - For some methods psi4 won&#39;t generate a post scf density. Thus calculating</span>
+<span class="c1">#   a property is necessary for some post-scf methods.</span>
+<span class="c1"># - Obtain a wavefunction object (wfn) as well.</span>
+<span class="n">e</span><span class="p">,</span> <span class="n">wfn</span> <span class="o">=</span> <span class="n">psi4</span><span class="o">.</span><span class="n">properties</span><span class="p">(</span><span class="s2">&quot;CCSD/cc-pvdz&quot;</span><span class="p">,</span> <span class="n">return_wfn</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">properties</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;dipole&quot;</span><span class="p">],</span> <span class="n">molecule</span><span class="o">=</span><span class="n">Ne</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>All of the information required to invert the calculated density into its effective potential
+is stored in the wfn. With it, we can create an inverter object and start using
+n2v.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">ine</span> <span class="o">=</span> <span class="n">n2v</span><span class="o">.</span><span class="n">Inverter</span><span class="p">(</span><span class="n">wfn</span><span class="p">,</span> <span class="n">pbs</span><span class="o">=</span><span class="s1">&#39;cc-pvdz&#39;</span><span class="p">)</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Often times, we expand the effective potential in a different, larger basis</span>
+<span class="sd">set, when this happens, we specify the name of the basis as an argument.</span>
+<span class="sd">If the same basis is to be used, you can ommit the argument and the same basis</span>
+<span class="sd">as the calculation will be used.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+</pre></div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="on_the_grid.html" class="btn btn-neutral float-right" title="On the Grid" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="install.html" class="btn btn-neutral float-left" title="Installation" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2020, Wasserman Group.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

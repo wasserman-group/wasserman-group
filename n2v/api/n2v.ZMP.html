@@ -1,0 +1,311 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>ZMP &mdash; n2v  documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/graphviz.css" type="text/css" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> n2v
+          
+
+          
+            
+            <img src="../_static/logo_nameless_png.png" class="logo" alt="Logo"/>
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../install.html"><strong>Installation</strong></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../first_steps.html"><strong>First Steps</strong></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../on_the_grid.html"><strong>On the Grid</strong></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../invert.html"><strong>Inverting A Density</strong></a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">n2v</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+      <li>ZMP</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../_sources/api/n2v.ZMP.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="zmp">
+<h1>ZMP<a class="headerlink" href="#zmp" title="Permalink to this headline">¶</a></h1>
+<dl class="py class">
+<dt id="n2v.ZMP">
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">n2v.</span></code><code class="sig-name descname"><span class="pre">ZMP</span></code><a class="reference internal" href="../_modules/n2v/methods/zmp.html#ZMP"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#n2v.ZMP" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p class="rubric">Methods Summary</p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#n2v.ZMP.generate_s_functional" title="n2v.ZMP.generate_s_functional"><code class="xref py py-obj docutils literal notranslate"><span class="pre">generate_s_functional</span></code></a>(lam, zmp_functional, …)</p></td>
+<td><p>Generates S_n Functional as described in: <a class="reference external" href="https://doi.org/10.1002/qua.26400">https://doi.org/10.1002/qua.26400</a></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#n2v.ZMP.zmp" title="n2v.ZMP.zmp"><code class="xref py py-obj docutils literal notranslate"><span class="pre">zmp</span></code></a>([opt_max_iter, opt_tol, lambda_list, …])</p></td>
+<td><p>Performs ZMP optimization according to:</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#n2v.ZMP.zmp_scf" title="n2v.ZMP.zmp_scf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">zmp_scf</span></code></a>(lambda_list, zmp_functional, …)</p></td>
+<td><p>Performs scf cycle Parameters:     zmp_functional: options the penalty term. But others are not currently working except for Hartree penalty (original ZMP). ———-.</p></td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Methods Documentation</p>
+<dl class="py method">
+<dt id="n2v.ZMP.generate_s_functional">
+<code class="sig-name descname"><span class="pre">generate_s_functional</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lam</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">zmp_functional</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Cocca</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Coccb</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Da</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Db</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/n2v/methods/zmp.html#ZMP.generate_s_functional"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#n2v.ZMP.generate_s_functional" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generates S_n Functional as described in:
+<a class="reference external" href="https://doi.org/10.1002/qua.26400">https://doi.org/10.1002/qua.26400</a></p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="n2v.ZMP.zmp">
+<code class="sig-name descname"><span class="pre">zmp</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">opt_max_iter</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">opt_tol</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-06</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lambda_list</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[70]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">zmp_mixing</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">print_scf</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/n2v/methods/zmp.html#ZMP.zmp"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#n2v.ZMP.zmp" title="Permalink to this definition">¶</a></dt>
+<dd><blockquote>
+<div><p>Performs ZMP optimization according to:</p>
+<p>1) ‘From electron densities to Kohn-Sham kinetic energies, orbital energies,
+exchange-correlation potentials, and exchange-correlation energies’ by
+Zhao + Morrison + Parr.
+<a class="reference external" href="https://doi.org/10.1103/PhysRevA.50.2138">https://doi.org/10.1103/PhysRevA.50.2138</a></p>
+<p>Additional DIIS algorithms obtained from:
+2) ‘Psi4NumPy: An interactive quantum chemistry programming environment
+for reference implementations and rapid development.’ by
+Daniel G.A. Smith and others.
+<a class="reference external" href="https://doi.org/10.1021/acs.jctc.8b00286">https://doi.org/10.1021/acs.jctc.8b00286</a></p>
+<p>Functionals that drive the SCF procedure are obtained from:
+<a class="reference external" href="https://doi.org/10.1002/qua.26400">https://doi.org/10.1002/qua.26400</a></p>
+<dl>
+<dt>lambda_list: list</dt><dd><p>List of Lamda parameters used as a coefficient for Hartree
+difference in SCF cycle.</p>
+</dd>
+<dt>zmp_mixing: float, optional</dt><dd><p>mixing in [0,1]. How much of the new potential is added in.
+For example, zmp_mixing = 0 means the traditional ZMP, i.e. all the potentials from previous
+smaller lambda are ignored.
+Zmp_mixing = 1 means that all the potentials of previous lambdas are accumulated, the larger lambda
+potential are meant to fix the wrong/inaccurate region of the potential of the sum of the previous
+potentials instead of providing an entire new potentials.
+default: 1</p>
+</dd>
+<dt>opt_max_iter: float</dt><dd><p>Maximum number of iterations for scf cycle</p>
+</dd>
+<dt>opt_tol: float</dt><dd><p>Convergence criteria set for Density Difference and DIIS error.</p>
+</dd>
+<dt>return:</dt><dd><p>The result will be stored in self.proto_density_a and self.proto_density_b
+For zmp_mixing==1, restricted (ref==1):</p>
+<blockquote>
+<div><p>self.proto_density_a = sum_i lambda_i * (Da_i - Dt[0]) - 1/N * (Dt[0])
+self.proto_density_b = sum_i lambda_i * (Db_i - Dt[1]) - 1/N * (Dt[1]);</p>
+</div></blockquote>
+<dl class="simple">
+<dt>unrestricted (ref==1):</dt><dd><p>self.proto_density_a = sum_i lambda_i * (Da_i - Dt[0]) - 1/N * (Dt[0] + Dt[1])
+self.proto_density_b = sum_i lambda_i * (Db_i - Dt[1]) - 1/N * (Dt[0] + Dt[1]);</p>
+</dd>
+<dt>For restricted (ref==1):</dt><dd><p>vxc = int dr’</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</div></blockquote>
+<dl>
+<dt>rac{self.proto_density_a + self.proto_density_b}{<a href="#id1"><span class="problematic" id="id2">|r-r'|</span></a>}</dt><dd><p>= 2 * int dr’</p>
+</dd>
+<dt>rac{self.proto_density_a}{<a href="#id3"><span class="problematic" id="id4">|r-r'|</span></a>};</dt><dd><dl class="simple">
+<dt>for unrestricted (ref==2):</dt><dd><p>vxc_up = int dr’</p>
+</dd>
+</dl>
+</dd>
+<dt>rac{self.proto_density_a}{<a href="#id5"><span class="problematic" id="id6">|r-r'|</span></a>}</dt><dd><p>vxc_down = int dr’</p>
+</dd>
+<dt>rac{self.proto_density_b}{<a href="#id7"><span class="problematic" id="id8">|r-r'|</span></a>}.</dt><dd><dl>
+<dt>To get potential on grid, one needs to do</dt><dd><p>vxc = self.on_grid_esp(Da=self.proto_density_a, Db=self.proto_density_b, grid=grid) for restricted;
+vxc_up = self.on_grid_esp(Da=self.proto_density_a, Db=np.zeros_like(self.proto_density_a),</p>
+<blockquote>
+<div><p>grid=grid) for unrestricted;</p>
+</div></blockquote>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="n2v.ZMP.zmp_scf">
+<code class="sig-name descname"><span class="pre">zmp_scf</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lambda_list</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">zmp_functional</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">maxiter</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">print_scf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">D_conv</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/n2v/methods/zmp.html#ZMP.zmp_scf"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#n2v.ZMP.zmp_scf" title="Permalink to this definition">¶</a></dt>
+<dd><p>Performs scf cycle
+Parameters:</p>
+<blockquote>
+<div><p>zmp_functional: options the penalty term.
+But others are not currently working except for Hartree penalty (original ZMP).</p>
+</div></blockquote>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2020, Wasserman Group.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>
