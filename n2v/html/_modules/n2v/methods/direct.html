@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#2D2D2D" />
+  
+  <title>n2v :: n2v.methods.direct</title>
+  
+
+  <link rel="icon" type="image/png" sizes="32x32" href="../../../_static/img/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="../../../_static/img/favicon-16x16.png">
+        <link rel="index" title="Index"
+              href="../../../genindex.html"/>
+
+  <link rel="stylesheet" href="../../../_static/css/insegel.css"/>
+
+  <script type="text/javascript">
+    var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:'',
+        VERSION:'',
+        LANGUAGE:'None',
+        COLLAPSE_INDEX:false,
+        FILE_SUFFIX:'.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+    };
+  </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+
+  <script src="https://email.tl.fortawesome.com/c/eJxNjUEOgyAQAF8jR7Kw6wIHDh7sP1Cw2mgxgmn6-3JsMqc5zEQfE8dkxOY1KKMUOI3ACFKRJpSW2AAp7ontYIaxI6i7XPJVwyeVfCQ550Os3jLrGSNOLgbdAy6s0PBk2TFNjEbsfq31LB0OnX407pJa5v2faRadwSW63mn5KuLyR9j2tgx3zecanl-55R_-jjPs"></script>
+
+</head>
+
+<body>
+  <div id="insegel-container">
+    <header>
+      <div id="logo-container">
+          
+          <a href="../../../index.html"><img src="../../../_static/logo_nameless_png.png"></a>
+          
+
+      </div>
+      <div id="project-container">
+        <h1>n2v Documentation</h1>
+      </div>
+    </header>
+
+    <div id="content-container">
+
+      <div id="main-content-container">
+        <div id="main-content-header">
+          <h1>n2v.methods.direct</h1>
+        </div>
+        <div id="main-content">
+          
+  <h1>Source code for n2v.methods.direct</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">direct.py</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="n">np</span><span class="o">.</span><span class="n">seterr</span><span class="p">(</span><span class="n">divide</span><span class="o">=</span><span class="s1">&#39;ignore&#39;</span><span class="p">,</span> <span class="n">invalid</span><span class="o">=</span><span class="s1">&#39;ignore&#39;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Direct"><a class="viewcode-back" href="../../../api/n2v.Direct.html#n2v.Direct">[docs]</a><span class="k">class</span> <span class="nc">Direct</span><span class="p">():</span>
+<div class="viewcode-block" id="Direct.direct_inversion"><a class="viewcode-back" href="../../../api/n2v.Direct.html#n2v.Direct.direct_inversion">[docs]</a>    <span class="k">def</span> <span class="nf">direct_inversion</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">grid</span><span class="p">,</span> <span class="n">correction</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Given a set of canonical kohn-sham orbitals and energies,</span>
+<span class="sd">        constructs vxc by inverting the Kohn-Sham Equations.</span>
+<span class="sd">        If correction is added, it will be performed according to:</span>
+<span class="sd">        Removal of Basis-Set Artifacts in Kohn–Sham Potentials Recovered from Electron Densities</span>
+<span class="sd">        Gaiduk + Ryabinkin + Staroverov</span>
+<span class="sd">        https://pubs.acs.org/doi/abs/10.1021/ct4004146</span>
+
+<span class="sd">        Parameters:</span>
+<span class="sd">        -----------</span>
+
+<span class="sd">        grid: np.ndarray. Shape: (3xnpoints)</span>
+<span class="sd">            Grid used to compute correction. </span>
+<span class="sd">            If None, dft grid is used. </span>
+<span class="sd">        correction: bool</span>
+<span class="sd">            Adds correction for spurious basis set artifacts</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">        --------</span>
+<span class="sd">        vxc_inverted: np.ndarray</span>
+<span class="sd">            Vxc obtained from inverting kohn sham equations. </span>
+<span class="sd">            Equation (3)</span>
+<span class="sd">        vxc_lda: np.ndarray</span>
+<span class="sd">            LDA potential from forward calculation. </span>
+<span class="sd">        osc_profile: np.ndarray</span>
+<span class="sd">            Oscillatory profile that corrects inverted potentials. </span>
+<span class="sd">            Equation (5)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">wfn</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">wfn</span>
+
+        <span class="c1">#Sanity check. </span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">functional</span> <span class="o">=</span> <span class="n">wfn</span><span class="o">.</span><span class="n">functional</span><span class="p">()</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">ex</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">ex</span><span class="si">}</span><span class="s2">. Direct inversion only available for DFT methods. &quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">functional</span><span class="o">.</span><span class="n">name</span><span class="p">()</span> <span class="o">==</span> <span class="s1">&#39;HF&#39;</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Direct inversion only available for DFT methods. &quot;</span><span class="p">)</span>
+                                    
+        <span class="c1">#Build components on grid:</span>
+        <span class="k">if</span> <span class="n">grid</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1">#Use user-defined grid</span>
+            <span class="n">orb</span>       <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">on_grid_orbitals</span><span class="p">(</span><span class="n">Ca</span><span class="o">=</span><span class="n">wfn</span><span class="o">.</span><span class="n">Ca</span><span class="p">()</span><span class="o">.</span><span class="n">np</span><span class="p">,</span> <span class="n">Cb</span><span class="o">=</span><span class="n">wfn</span><span class="o">.</span><span class="n">Cb</span><span class="p">()</span><span class="o">.</span><span class="n">np</span><span class="p">,</span> <span class="n">grid</span><span class="o">=</span><span class="n">grid</span><span class="p">)</span>
+            <span class="n">lap</span>       <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">on_grid_lap_phi</span><span class="p">(</span><span class="n">Ca</span><span class="o">=</span><span class="n">wfn</span><span class="o">.</span><span class="n">Ca</span><span class="p">()</span><span class="o">.</span><span class="n">np</span><span class="p">,</span> <span class="n">Cb</span><span class="o">=</span><span class="n">wfn</span><span class="o">.</span><span class="n">Cb</span><span class="p">()</span><span class="o">.</span><span class="n">np</span><span class="p">,</span> <span class="n">grid</span><span class="o">=</span><span class="n">grid</span><span class="p">)</span>
+            <span class="n">vex</span><span class="p">,</span> <span class="n">vha</span>  <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">on_grid_esp</span><span class="p">(</span><span class="n">Da</span><span class="o">=</span><span class="n">wfn</span><span class="o">.</span><span class="n">Da</span><span class="p">()</span><span class="o">.</span><span class="n">np</span><span class="p">,</span> <span class="n">Db</span><span class="o">=</span><span class="n">wfn</span><span class="o">.</span><span class="n">Db</span><span class="p">()</span><span class="o">.</span><span class="n">np</span><span class="p">,</span> <span class="n">grid</span><span class="o">=</span><span class="n">grid</span><span class="p">)[:</span><span class="mi">2</span><span class="p">]</span>
+            <span class="n">den</span>       <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">on_grid_density</span><span class="p">(</span><span class="n">Da</span><span class="o">=</span><span class="n">wfn</span><span class="o">.</span><span class="n">Da</span><span class="p">()</span><span class="o">.</span><span class="n">np</span><span class="p">,</span> <span class="n">Db</span><span class="o">=</span><span class="n">wfn</span><span class="o">.</span><span class="n">Db</span><span class="p">()</span><span class="o">.</span><span class="n">np</span><span class="p">,</span> <span class="n">grid</span><span class="o">=</span><span class="n">grid</span><span class="p">)</span>
+            <span class="n">eig_a</span> <span class="o">=</span> <span class="n">wfn</span><span class="o">.</span><span class="n">epsilon_a_subset</span><span class="p">(</span><span class="s2">&quot;AO&quot;</span><span class="p">,</span> <span class="s2">&quot;ALL&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">np</span>
+            <span class="n">eig_b</span> <span class="o">=</span> <span class="n">wfn</span><span class="o">.</span><span class="n">epsilon_b_subset</span><span class="p">(</span><span class="s2">&quot;AO&quot;</span><span class="p">,</span> <span class="s2">&quot;ALL&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">np</span>
+            
+            <span class="c1">#Calculate correction</span>
+            <span class="k">if</span> <span class="n">correction</span> <span class="ow">is</span> <span class="kc">True</span><span class="p">:</span>
+                <span class="n">osc_profile</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_basis_set_correction</span><span class="p">(</span><span class="n">grid</span><span class="p">)</span>
+
+            
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1">#Use DFT grid</span>
+            <span class="n">Vpot</span> <span class="o">=</span> <span class="n">wfn</span><span class="o">.</span><span class="n">V_potential</span><span class="p">()</span>
+            <span class="n">orb</span>       <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">on_grid_orbitals</span><span class="p">(</span><span class="n">Ca</span><span class="o">=</span><span class="n">wfn</span><span class="o">.</span><span class="n">Ca</span><span class="p">()</span><span class="o">.</span><span class="n">np</span><span class="p">,</span> <span class="n">Cb</span><span class="o">=</span><span class="n">wfn</span><span class="o">.</span><span class="n">Cb</span><span class="p">()</span><span class="o">.</span><span class="n">np</span><span class="p">,</span> <span class="n">Vpot</span><span class="o">=</span><span class="n">Vpot</span><span class="p">)</span>
+            <span class="n">lap</span>       <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">on_grid_lap_phi</span><span class="p">(</span><span class="n">Ca</span><span class="o">=</span><span class="n">wfn</span><span class="o">.</span><span class="n">Ca</span><span class="p">()</span><span class="o">.</span><span class="n">np</span><span class="p">,</span> <span class="n">Cb</span><span class="o">=</span><span class="n">wfn</span><span class="o">.</span><span class="n">Cb</span><span class="p">()</span><span class="o">.</span><span class="n">np</span><span class="p">,</span> <span class="n">Vpot</span><span class="o">=</span><span class="n">Vpot</span><span class="p">)</span>
+            <span class="n">vex</span><span class="p">,</span> <span class="n">vha</span>  <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">on_grid_esp</span><span class="p">(</span><span class="n">Da</span><span class="o">=</span><span class="n">wfn</span><span class="o">.</span><span class="n">Da</span><span class="p">()</span><span class="o">.</span><span class="n">np</span><span class="p">,</span> <span class="n">Db</span><span class="o">=</span><span class="n">wfn</span><span class="o">.</span><span class="n">Db</span><span class="p">()</span><span class="o">.</span><span class="n">np</span><span class="p">,</span> <span class="n">Vpot</span><span class="o">=</span><span class="n">Vpot</span><span class="p">)[:</span><span class="mi">2</span><span class="p">]</span>
+            <span class="n">den</span>       <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">on_grid_density</span><span class="p">(</span><span class="n">Da</span><span class="o">=</span><span class="n">wfn</span><span class="o">.</span><span class="n">Da</span><span class="p">()</span><span class="o">.</span><span class="n">np</span><span class="p">,</span> <span class="n">Db</span><span class="o">=</span><span class="n">wfn</span><span class="o">.</span><span class="n">Db</span><span class="p">()</span><span class="o">.</span><span class="n">np</span><span class="p">,</span> <span class="n">Vpot</span><span class="o">=</span><span class="n">Vpot</span><span class="p">)</span>
+            <span class="n">eig_a</span> <span class="o">=</span> <span class="n">wfn</span><span class="o">.</span><span class="n">epsilon_a_subset</span><span class="p">(</span><span class="s2">&quot;AO&quot;</span><span class="p">,</span> <span class="s2">&quot;ALL&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">np</span>
+
+            <span class="c1">#Calculate correction</span>
+            <span class="k">if</span> <span class="n">correction</span> <span class="ow">is</span> <span class="kc">True</span><span class="p">:</span>
+                <span class="n">dft_grid</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">generate_dft_grid</span><span class="p">(</span><span class="n">Vpot</span><span class="p">)</span>
+                <span class="n">osc_profile</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_basis_set_correction</span><span class="p">(</span><span class="n">dft_grid</span><span class="p">)</span>
+
+        <span class="c1">#Build Reversed LDA from orbitals and density</span>
+        <span class="n">kinetic</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">den</span><span class="p">)</span>
+        <span class="n">propios</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">den</span><span class="p">)</span> 
+
+        <span class="c1">#Build v_eff. equation (2) for restricted and unrestricted</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">ref</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">wfn</span><span class="o">.</span><span class="n">nalpha</span><span class="p">()):</span>
+                <span class="c1">#Alpha orbitals</span>
+                <span class="n">kinetic</span> <span class="o">+=</span> <span class="mf">2.0</span> <span class="o">*</span> <span class="p">(</span><span class="mf">0.5</span> <span class="o">*</span> <span class="n">orb</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">*</span> <span class="n">lap</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+                <span class="n">propios</span> <span class="o">+=</span> <span class="mf">2.0</span> <span class="o">*</span> <span class="n">eig_a</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">orb</span><span class="p">[</span><span class="n">i</span><span class="p">])</span><span class="o">**</span><span class="mi">2</span> 
+            
+            <span class="k">with</span> <span class="n">np</span><span class="o">.</span><span class="n">errstate</span><span class="p">(</span><span class="n">divide</span><span class="o">=</span><span class="s1">&#39;ignore&#39;</span><span class="p">,</span> <span class="n">invalid</span><span class="o">=</span><span class="s1">&#39;ignore&#39;</span><span class="p">):</span>
+                <span class="n">veff</span> <span class="o">=</span> <span class="p">(</span><span class="n">kinetic</span> <span class="o">+</span> <span class="n">propios</span><span class="p">)</span> <span class="o">/</span> <span class="n">den</span>
+            <span class="n">vxc_inverted</span> <span class="o">=</span> <span class="n">veff</span> <span class="o">-</span> <span class="n">vha</span> <span class="o">-</span> <span class="n">vex</span>
+            
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">ref</span><span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">wfn</span><span class="o">.</span><span class="n">nalpha</span><span class="p">()):</span>
+                <span class="c1">#Alpha orbitals</span>
+                <span class="n">kinetic</span><span class="p">[:,</span><span class="mi">0</span><span class="p">]</span> <span class="o">+=</span> <span class="p">(</span><span class="mf">0.5</span> <span class="o">*</span> <span class="n">orb</span><span class="p">[</span><span class="n">i</span><span class="p">][:,</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">lap</span><span class="p">[</span><span class="n">i</span><span class="p">][:,</span><span class="mi">0</span><span class="p">])</span>
+                <span class="n">propios</span><span class="p">[:,</span><span class="mi">0</span><span class="p">]</span> <span class="o">+=</span> <span class="n">eig_a</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">orb</span><span class="p">[</span><span class="n">i</span><span class="p">][:,</span><span class="mi">0</span><span class="p">])</span><span class="o">**</span><span class="mi">2</span> 
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">wfn</span><span class="o">.</span><span class="n">nbeta</span><span class="p">()):</span>
+                <span class="c1">#Beta orbitals</span>
+                <span class="n">kinetic</span><span class="p">[:,</span><span class="mi">1</span><span class="p">]</span> <span class="o">+=</span> <span class="p">(</span><span class="mf">0.5</span> <span class="o">*</span> <span class="n">orb</span><span class="p">[</span><span class="n">i</span><span class="p">][:,</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="n">lap</span><span class="p">[</span><span class="n">i</span><span class="p">][:,</span><span class="mi">1</span><span class="p">])</span>
+                <span class="n">propios</span><span class="p">[:,</span><span class="mi">1</span><span class="p">]</span> <span class="o">+=</span> <span class="n">eig_b</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">orb</span><span class="p">[</span><span class="n">i</span><span class="p">][:,</span><span class="mi">1</span><span class="p">])</span><span class="o">**</span><span class="mi">2</span> 
+
+            <span class="k">with</span> <span class="n">np</span><span class="o">.</span><span class="n">errstate</span><span class="p">(</span><span class="n">divide</span><span class="o">=</span><span class="s1">&#39;ignore&#39;</span><span class="p">,</span> <span class="n">invalid</span><span class="o">=</span><span class="s1">&#39;ignore&#39;</span><span class="p">):</span>
+                <span class="n">veff</span> <span class="o">=</span> <span class="p">(</span><span class="n">kinetic</span> <span class="o">+</span> <span class="n">propios</span><span class="p">)</span> <span class="o">/</span> <span class="n">den</span>
+            <span class="n">vxc_inverted</span> <span class="o">=</span> <span class="n">veff</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">repeat</span><span class="p">(</span><span class="n">vha</span><span class="p">[:,</span><span class="kc">None</span><span class="p">],</span> <span class="mi">2</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">repeat</span><span class="p">(</span><span class="n">vex</span><span class="p">[:,</span><span class="kc">None</span><span class="p">],</span> <span class="mi">2</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+        <span class="c1">#Add correction</span>
+        <span class="k">if</span> <span class="n">correction</span> <span class="ow">is</span> <span class="kc">True</span><span class="p">:</span>
+            <span class="n">vxc_inverted</span> <span class="o">-=</span> <span class="n">osc_profile</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">grid</span><span class="o">.</span><span class="n">vxc</span> <span class="o">=</span> <span class="n">vxc_inverted</span>
+        <span class="k">return</span> <span class="n">vxc_inverted</span></div></div>
+</pre></div>
+
+        </div>
+      </div>
+
+      <div id="side-menu-container">
+
+        <div id="search" role="search">
+        <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+            <input type="text" name="q" placeholder="Search..." />
+            <input type="hidden" name="check_keywords" value="yes" />
+            <input type="hidden" name="area" value="default" />
+        </form>
+</div>
+
+        <div id="side-menu" role="navigation">
+
+          
+  
+    
+  
+  
+    <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api.html">API Documentation</a></li>
+</ul>
+
+  
+
+
+        </div>
+
+        
+
+      </div>
+
+    </div>
+
+<footer>
+    <div id="footer-info">
+        <ul id="build-details">
+            
+
+            
+
+            
+        </ul>
+        <div id="credit">
+            created with <a href="http://sphinx-doc.org/">Sphinx</a> and <a href="https://github.com/Autophagy/insegel">Insegel</a>
+
+        </div>
+    </div>
+
+    <a id="menu-toggle" class="fa fa-bars" aria-hidden="true"></a>
+
+    <script type="text/javascript">
+      $("#menu-toggle").click(function() {
+        $("#menu-toggle").toggleClass("toggled");
+        $("#side-menu-container").slideToggle(300);
+      });
+    </script>
+
+</footer> 
+
+</div>
+
+</body>
+</html>

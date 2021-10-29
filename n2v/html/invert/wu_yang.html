@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#2D2D2D" />
+  
+  <title>n2v :: Wu Yang</title>
+  
+
+  <link rel="icon" type="image/png" sizes="32x32" href="../_static/img/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="../_static/img/favicon-16x16.png">
+  <link rel="index" title="Index" href="../genindex.html"/>
+
+  <link rel="stylesheet" href="../_static/css/insegel.css"/>
+  <link rel="stylesheet" href="../_static/css/custom.css"/>
+
+  <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+      <script type="text/javascript" src="../_static/jquery.js"></script>
+      <script type="text/javascript" src="../_static/underscore.js"></script>
+      <script type="text/javascript" src="../_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+  
+
+  <script src="https://email.tl.fortawesome.com/c/eJxNjUEOgyAQAF8jR7Kw6wIHDh7sP1Cw2mgxgmn6-3JsMqc5zEQfE8dkxOY1KKMUOI3ACFKRJpSW2AAp7ontYIaxI6i7XPJVwyeVfCQ550Os3jLrGSNOLgbdAy6s0PBk2TFNjEbsfq31LB0OnX407pJa5v2faRadwSW63mn5KuLyR9j2tgx3zecanl-55R_-jjPs"></script> 
+</head>
+
+<body>
+  <div id="insegel-container">
+    <header>
+      <div id="logo-container">
+          
+          <a href="../index.html"><img src="../_static/logo_nameless_png.png"></a>
+          
+      </div>
+      <div id="project-container">
+        
+        <h1>n2v Documentation</h1>
+        
+      </div>
+    </header>
+
+    <div id="content-container">
+
+      <div id="main-content-container">
+        <div id="main-content" role="main">
+          
+  <div class="section" id="wu-yang">
+<h1>Wu Yang<a class="headerlink" href="#wu-yang" title="Permalink to this headline">¶</a></h1>
+<p>The Wu and Yang method is a direct optimization that works by building a variational functional.
+The determination of the potential is turned into the maximization of this functional of the potential.</p>
+<p>The full method’s description can be found:
+Wu, Qin, and Weitao Yang.
+“A direct optimization method for calculating density functionals and exchange–correlation potentials from electron densities.”
+The Journal of chemical physics 118.6 (2003): 2498-2509.</p>
+<p>The method works by building a functional of the potential.</p>
+<div class="math notranslate nohighlight">
+\[W[\Psi_{det}[v_{KS}], v_{KS}] = T_s[\Psi_{det}] + \int d\mathbf{r} v_{KS}(\mathbf{r})\{n(\mathbf{r})-n_{in}(\mathbf{r})\}\]</div>
+<p>At the minimum, this functional should be stationary withn respect to any variation of the potential. So that:</p>
+<div class="math notranslate nohighlight">
+\[\frac{\delta W[\Psi_{det}[v_{KS}], v_{KS}]}{\delta v_{KS}(\mathbf{r})} = n(\mathbf{r})-n_{in}(\mathbf{r})\]</div>
+<p>Which is just the constraint condition of the electron density. Additionally we may require the second-order functional derivative.
+In practice, we express it in terms of the orbitals through first order perturbation theory:</p>
+<div class="math notranslate nohighlight">
+\[\frac{\delta^2 W[\Psi_{det}[v_{KS}], v_{KS}]}{\delta v_{KS}(\mathbf{r})\delta v_{KS}(\mathbf{r'})} =  \frac{\delta n(\mathbf{r})}{\delta v_{KS}(\mathbf{r'})} = 2\sum_i^{occ.}\sum_a^{unocc.} \frac{\psi_i^*(\mathbf{r})\psi_a(\mathbf{r})\psi_i(\mathbf{r'})\psi_a^*(\mathbf{r'})}{\epsilon_i - \epsilon_a}.\]</div>
+<p>With the functional, its gradient and hessian. We can use an optimizer to optimize the functional. In <em>n2v</em> we use the different optimizers from <em>Scipy</em>.
+Here is how it works.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">Be</span> <span class="o">=</span> <span class="n">psi4</span><span class="o">.</span><span class="n">geometry</span><span class="p">(</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">0 1</span>
+<span class="sd">Be</span>
+<span class="sd">noreorient</span>
+<span class="sd">nocom</span>
+<span class="sd">units bohr</span>
+<span class="sd">symmetry c1</span>
+<span class="sd">&quot;&quot;&quot;</span> <span class="p">)</span>
+
+<span class="n">psi4</span><span class="o">.</span><span class="n">set_options</span><span class="p">({</span><span class="s2">&quot;reference&quot;</span> <span class="p">:</span> <span class="s2">&quot;rhf&quot;</span><span class="p">})</span>  <span class="c1"># Spin-Restricted</span>
+
+<span class="c1"># IMPORTANT NOTE: psi4.energy does not update cc densities. So we calculate dipole moments instead.</span>
+<span class="n">wfn</span> <span class="o">=</span> <span class="n">psi4</span><span class="o">.</span><span class="n">properties</span><span class="p">(</span><span class="s2">&quot;ccsd/aug-cc-pvtz&quot;</span><span class="p">,</span>  <span class="n">return_wfn</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">molecule</span><span class="o">=</span><span class="n">Be</span><span class="p">,</span> <span class="nb">property</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;dipole&#39;</span><span class="p">])[</span><span class="mi">1</span><span class="p">]</span>
+
+<span class="c1"># Build inverter and set target</span>
+<span class="n">ibe</span> <span class="o">=</span> <span class="n">n2v</span><span class="o">.</span><span class="n">Inverter</span><span class="p">(</span><span class="n">wfn</span><span class="p">,</span> <span class="n">pbs</span><span class="o">=</span><span class="s2">&quot;aug-cc-pvqz&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>And just like we do in the ZMP method, we can add to the potential all the components that we know exactly.
+So that the Kohn-Sham potential, if we are using the Fermi Amaldi potential as the guide, can be express as:</p>
+<div class="math notranslate nohighlight">
+\[v_{Kohn-Sham}=v_{ext}+v_{guide}+v_{rest}\]</div>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Inverter with WuYang method, guide potention v0=Fermi-Amaldi</span>
+<span class="n">ibe</span><span class="o">.</span><span class="n">invert</span><span class="p">(</span><span class="s2">&quot;WuYang&quot;</span><span class="p">,</span> <span class="n">guide_potential_components</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;fermi_amaldi&quot;</span><span class="p">])</span>
+</pre></div>
+</div>
+<p>The resulting potential will be found on <code class="docutils literal notranslate"><span class="pre">`inverter.v_pbs`</span></code> which can be turned back into its repressentation in space to be visualized:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">vrest</span> <span class="o">=</span> <span class="n">ibe</span><span class="o">.</span><span class="n">on_grid_ao</span><span class="p">(</span><span class="n">ibe</span><span class="o">.</span><span class="n">v_pbs</span><span class="p">,</span> <span class="n">grid</span><span class="o">=</span><span class="n">grids</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="n">ibe</span><span class="o">.</span><span class="n">pbs</span><span class="p">)</span>  <span class="c1"># Note that specify the basis set</span>
+                                                              <span class="c1"># that vrest is on.</span>
+</pre></div>
+</div>
+<p>The full example can be found in the <em>n2v examples repository</em>.</p>
+</div>
+
+
+        </div>
+      </div>
+
+      <div id="side-menu-container">
+
+        <div id="search" role="search">
+        <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+            <input type="text" name="q" placeholder="Search..." />
+            <input type="hidden" name="check_keywords" value="yes" />
+            <input type="hidden" name="area" value="default" />
+        </form>
+</div>
+
+        <div id="side-menu" role="navigation">
+
+          
+  
+    
+  
+  
+    <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../install.html"><strong>Installation</strong></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../first_steps.html"><strong>First Steps</strong></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../on_the_grid.html"><strong>On the Grid</strong></a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../invert.html"><strong>Inverting A Density</strong></a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="direct.html">Direct</a></li>
+<li class="toctree-l2"><a class="reference internal" href="zmp.html">ZMP</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Wu Yang</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ou_carter.html">Ou and Carter</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pdeco.html">PDE Constrained Optimization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="mrks.html">Modified Ryabinkin-Kohut-Staroverov</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../api.html"><strong>API Documentation</strong></a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#module-n2v">n2v Package</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../api.html#classes">Classes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../api.html#class-inheritance-diagram">Class Inheritance Diagram</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  
+
+
+        </div>
+
+        
+
+      </div>
+
+    </div>
+
+<footer>
+    <div id="footer-info">
+        <ul id="build-details">
+            
+                <li class="footer-element">
+                    
+                        <a href="../_sources/invert/wu_yang.rst.txt" rel="nofollow"> source</a>
+                    
+                </li>
+            
+
+            
+
+            
+        </ul>
+
+        
+            <div id="copyright">
+                &copy; 2020, Wasserman Group.
+            </div>
+        
+
+        <div id="credit">
+            created with <a href="http://sphinx-doc.org/">Sphinx</a> and <a href="https://github.com/Autophagy/insegel">Insegel</a>
+
+        </div>
+    </div>
+
+    <a id="menu-toggle" class="fa fa-bars" aria-hidden="true"></a>
+
+    <script type="text/javascript">
+      $("#menu-toggle").click(function() {
+        $("#menu-toggle").toggleClass("toggled");
+        $("#side-menu-container").slideToggle(300);
+      });
+    </script>
+
+</footer> 
+
+</div>
+
+</body>
+</html>

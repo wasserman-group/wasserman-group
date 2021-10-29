@@ -1,0 +1,485 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>n2v.methods.pdeco &mdash; n2v  documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../../../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/graphviz.css" type="text/css" />
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> n2v
+          
+
+          
+            
+            <img src="../../../_static/logo_nameless_png.png" class="logo" alt="Logo"/>
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../install.html"><strong>Installation</strong></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../first_steps.html"><strong>First Steps</strong></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../on_the_grid.html"><strong>On the Grid</strong></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../invert.html"><strong>Inverting A Density</strong></a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">n2v</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+      <li>n2v.methods.pdeco</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for n2v.methods.pdeco</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">pdeco.py</span>
+
+<span class="sd">Functions associated with PDE-Constrained Optimization.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">opt_einsum</span> <span class="kn">import</span> <span class="n">contract</span>
+<span class="kn">from</span> <span class="nn">scipy.optimize</span> <span class="kn">import</span> <span class="n">minimize</span>
+<span class="k">try</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">psi4.core</span> <span class="kn">import</span> <span class="n">BasisSet</span> <span class="k">as</span> <span class="n">psi4_basiset</span>
+    <span class="kn">from</span> <span class="nn">psi4.core</span> <span class="kn">import</span> <span class="n">MintsHelper</span> <span class="k">as</span> <span class="n">psi4_mintshelper</span>
+<span class="k">except</span><span class="p">:</span>
+    <span class="k">pass</span>
+
+<div class="viewcode-block" id="PDECO"><a class="viewcode-back" href="../../../api/n2v.PDECO.html#n2v.PDECO">[docs]</a><span class="k">class</span> <span class="nc">PDECO</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Performs Optimization as in: 10.1063/1.1535422 - Qin Wu + Weitao Yang</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">    -----------</span>
+<span class="sd">    lambda_rgl: {None, float}. If float, lambda-regularization is added with lambda=lambda_rgl.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">regul_norm</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># Regularization norm: ||v||^2</span>
+    <span class="n">lambda_reg</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># Regularization constant</span>
+
+<div class="viewcode-block" id="PDECO.pdeco"><a class="viewcode-back" href="../../../api/n2v.PDECO.html#n2v.PDECO.pdeco">[docs]</a>    <span class="k">def</span> <span class="nf">pdeco</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">opt_max_iter</span><span class="p">,</span> <span class="n">reg</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">gtol</span><span class="o">=</span><span class="mf">1e-3</span><span class="p">,</span>
+              <span class="n">opt_method</span><span class="o">=</span><span class="s1">&#39;L-BFGS-B&#39;</span><span class="p">,</span> <span class="n">opt</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Calls scipy minimizer to minimize lagrangian. </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lambda_reg</span> <span class="o">=</span> <span class="n">reg</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">lambda_reg</span> <span class="o">=</span> <span class="n">reg</span>
+        <span class="k">if</span> <span class="n">opt</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">opt</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;disp&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">}</span>
+        <span class="n">opt</span><span class="p">[</span><span class="s1">&#39;maxiter&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">opt_max_iter</span>
+        <span class="n">opt</span><span class="p">[</span><span class="s1">&#39;gtol&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">gtol</span>
+
+        <span class="c1"># Initialization for D and C</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_diagonalize_with_potential_pbs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">v_pbs</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">S4</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">S4</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fouroverlap</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="n">opt_method</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s1">&#39;bfgs&#39;</span> <span class="ow">or</span> <span class="n">opt_method</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s1">&#39;l-bfgs-b&#39;</span><span class="p">:</span>
+            <span class="n">opt_results</span> <span class="o">=</span> <span class="n">minimize</span><span class="p">(</span> <span class="n">fun</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">lagrangian_pbeco</span><span class="p">,</span>
+                                    <span class="n">x0</span>  <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">v_pbs</span><span class="p">,</span> 
+                                    <span class="n">jac</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">gradient_pbeco</span><span class="p">,</span>
+                                    <span class="n">method</span>  <span class="o">=</span> <span class="n">opt_method</span><span class="p">,</span>
+                                    <span class="n">options</span> <span class="o">=</span> <span class="n">opt</span>
+                                    <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">F</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">opt_method</span><span class="si">}</span><span class="s1"> is not supported. Only BFGS &#39;</span>
+                             <span class="sa">F</span><span class="s1">&#39;and L-BFGS is supported.&#39;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">opt_results</span><span class="o">.</span><span class="n">success</span> <span class="o">==</span> <span class="kc">False</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">v_pbs</span> <span class="o">=</span> <span class="n">opt_results</span><span class="o">.</span><span class="n">x</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">opt_info</span> <span class="o">=</span> <span class="n">opt_results</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Optimization was unsucessful (|grad|=</span><span class="si">%.2e</span><span class="s2">) within </span><span class="si">%i</span><span class="s2"> iterations, &quot;</span>
+                             <span class="s2">&quot;try a different initial guess. </span><span class="si">%s</span><span class="s2">&quot;</span><span class="o">%</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">opt_results</span><span class="o">.</span><span class="n">jac</span><span class="p">),</span> <span class="n">opt_results</span><span class="o">.</span><span class="n">nit</span><span class="p">,</span> <span class="n">opt_results</span><span class="o">.</span><span class="n">message</span><span class="p">)</span>
+                             <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Optimization Successful within </span><span class="si">{</span><span class="n">opt_results</span><span class="o">.</span><span class="n">nit</span><span class="si">}</span><span class="s2"> iterations! |grad|=</span><span class="si">{</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">opt_results</span><span class="o">.</span><span class="n">jac</span><span class="p">)</span><span class="si">:</span><span class="s2">.2e</span><span class="si">}</span><span class="s2">.&quot;</span> <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">v_pbs</span> <span class="o">=</span> <span class="n">opt_results</span><span class="o">.</span><span class="n">x</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">opt_info</span> <span class="o">=</span> <span class="n">opt_results</span></div>
+
+
+<div class="viewcode-block" id="PDECO.fouroverlap"><a class="viewcode-back" href="../../../api/n2v.PDECO.html#n2v.PDECO.fouroverlap">[docs]</a>    <span class="k">def</span> <span class="nf">fouroverlap</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">wfn</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Calculates four overlap integral with Density Fitting method.</span>
+<span class="sd">        S4_{ijkl} = \int dr \phi_i(r)*\phi_j(r)*\phi_k(r)*\phi_l(r)</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        wfn: psi4.core.Wavefunction</span>
+<span class="sd">            Wavefunction object of molecule</span>
+
+<span class="sd">        Return</span>
+<span class="sd">        ------</span>
+<span class="sd">        S4</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">wfn</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">wfn</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">wfn</span>
+
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;4-AO-Overlap tensor will take about </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">nbf</span> <span class="o">**</span><span class="mi">4</span> <span class="o">/</span> <span class="mi">8</span> <span class="o">*</span> <span class="mf">1e-9</span><span class="si">:</span><span class="s2">f</span><span class="si">}</span><span class="s2"> GB.&quot;</span><span class="p">)</span>
+
+        <span class="n">mints</span> <span class="o">=</span> <span class="n">psi4_mintshelper</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">basis</span> <span class="p">)</span>
+
+        <span class="n">aux_basis</span> <span class="o">=</span> <span class="n">psi4_basiset</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="n">wfn</span><span class="o">.</span><span class="n">molecule</span><span class="p">(),</span> <span class="s2">&quot;DF_BASIS_SCF&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
+                                     <span class="s2">&quot;JKFIT&quot;</span><span class="p">,</span> <span class="n">wfn</span><span class="o">.</span><span class="n">basisset</span><span class="p">()</span><span class="o">.</span><span class="n">name</span><span class="p">())</span>
+        <span class="n">S_Pmn</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="n">mints</span><span class="o">.</span><span class="n">ao_3coverlap</span><span class="p">(</span><span class="n">aux_basis</span><span class="p">,</span> <span class="n">wfn</span><span class="o">.</span><span class="n">basisset</span><span class="p">(),</span>
+                                              <span class="n">wfn</span><span class="o">.</span><span class="n">basisset</span><span class="p">()))</span>
+        <span class="n">S_PQ</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">mints</span><span class="o">.</span><span class="n">ao_overlap</span><span class="p">(</span><span class="n">aux_basis</span><span class="p">,</span> <span class="n">aux_basis</span><span class="p">))</span>
+
+        <span class="n">S_PQinv</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">pinv</span><span class="p">(</span><span class="n">S_PQ</span><span class="p">,</span> <span class="n">rcond</span><span class="o">=</span><span class="mf">1e-9</span><span class="p">)</span>
+
+        <span class="n">S4</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s1">&#39;Pmn,PQ,Qrs-&gt;mnrs&#39;</span><span class="p">,</span> <span class="n">S_Pmn</span><span class="p">,</span> <span class="n">S_PQinv</span><span class="p">,</span> <span class="n">S_Pmn</span><span class="p">,</span> <span class="n">optimize</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">S4</span></div>
+
+<div class="viewcode-block" id="PDECO.lagrangian_pbeco"><a class="viewcode-back" href="../../../api/n2v.PDECO.html#n2v.PDECO.lagrangian_pbeco">[docs]</a>    <span class="k">def</span> <span class="nf">lagrangian_pbeco</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">v</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Lagrangian to be minimized wrt external potential</span>
+<span class="sd">        Equation (5) of main reference</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># If v is not updated, will not re-calculate.</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">allclose</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">v_pbs</span><span class="p">,</span> <span class="n">atol</span><span class="o">=</span><span class="mf">1e-15</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_diagonalize_with_potential_pbs</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+
+        <span class="c1"># self._diagonalize_with_potential_pbs(v)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">ref</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">L</span> <span class="o">=</span> <span class="mi">4</span> <span class="o">*</span> <span class="n">contract</span><span class="p">(</span><span class="s2">&quot;ijkl,ij,kl&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">S4</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">Da</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">Dt</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">Da</span><span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">Dt</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">L</span> <span class="o">=</span> <span class="n">contract</span><span class="p">(</span><span class="s2">&quot;ijkl,ij,kl&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">S4</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">Da</span><span class="o">+</span><span class="bp">self</span><span class="o">.</span><span class="n">Db</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">Dt</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">Dt</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">Da</span><span class="o">+</span><span class="bp">self</span><span class="o">.</span><span class="n">Db</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">Dt</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">Dt</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+        <span class="c1"># Add lambda-regularization</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">lambda_reg</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">T</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">T_pbs</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">ref</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">norm</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="p">(</span><span class="n">v</span><span class="p">[:</span><span class="bp">self</span><span class="o">.</span><span class="n">npbs</span><span class="p">]</span> <span class="o">@</span> <span class="n">T</span> <span class="o">@</span> <span class="n">v</span><span class="p">[:</span><span class="bp">self</span><span class="o">.</span><span class="n">npbs</span><span class="p">])</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">norm</span> <span class="o">=</span> <span class="p">(</span><span class="n">v</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">npbs</span><span class="p">:]</span> <span class="o">@</span> <span class="n">T</span> <span class="o">@</span> <span class="n">v</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">npbs</span><span class="p">:])</span> <span class="o">+</span> <span class="p">(</span><span class="n">v</span><span class="p">[:</span><span class="bp">self</span><span class="o">.</span><span class="n">npbs</span><span class="p">]</span> <span class="o">@</span> <span class="n">T</span> <span class="o">@</span> <span class="n">v</span><span class="p">[:</span><span class="bp">self</span><span class="o">.</span><span class="n">npbs</span><span class="p">])</span>
+
+            <span class="n">L</span> <span class="o">+=</span> <span class="n">norm</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">lambda_reg</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">regul_norm</span> <span class="o">=</span> <span class="n">norm</span>
+        <span class="k">return</span> <span class="n">L</span></div>
+
+<div class="viewcode-block" id="PDECO.gradient_pbeco"><a class="viewcode-back" href="../../../api/n2v.PDECO.html#n2v.PDECO.gradient_pbeco">[docs]</a>    <span class="k">def</span> <span class="nf">gradient_pbeco</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">v</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Calculates gradient wrt target density</span>
+<span class="sd">        Equation (11) of main reference</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># If v is not updated, will not re-calculate.</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">allclose</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">v_pbs</span><span class="p">,</span> <span class="n">atol</span><span class="o">=</span><span class="mf">1e-15</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_diagonalize_with_potential_pbs</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">ref</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">grad_temp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">nbf</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">nbf</span><span class="p">))</span>
+            <span class="n">g</span> <span class="o">=</span> <span class="mi">8</span> <span class="o">*</span> <span class="n">contract</span><span class="p">(</span><span class="s2">&quot;ijkl,ij,km-&gt;lm&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">S4</span><span class="p">,</span> <span class="mi">2</span> <span class="o">*</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Dt</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">Da</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">Coca</span><span class="p">)</span>  <span class="c1"># shape (ao, mo)</span>
+            <span class="n">u</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">contract</span><span class="p">(</span><span class="s2">&quot;lm,lm-&gt;m&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">Coca</span><span class="p">,</span> <span class="n">g</span><span class="p">)</span>  <span class="c1"># shape (mo, )</span>
+            <span class="n">g</span> <span class="o">-=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">contract</span><span class="p">(</span><span class="s1">&#39;m,ij,jm-&gt;im&#39;</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">S2</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">Coca</span><span class="p">)</span> <span class="c1"># shape (ao, mo)</span>
+            <span class="k">for</span> <span class="n">idx</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nalpha</span><span class="p">):</span>
+                <span class="n">LHS</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">Fock</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">S2</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">eigvecs_a</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span>
+                <span class="n">p_i</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">LHS</span><span class="p">,</span> <span class="n">g</span><span class="p">[:,</span> <span class="n">idx</span><span class="p">])</span>
+                <span class="c1"># Gram–Schmidt rotation</span>
+                <span class="n">p_i</span> <span class="o">-=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">p_i</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">S2</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">Coca</span><span class="p">[:,</span><span class="n">idx</span><span class="p">]))</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">Coca</span><span class="p">[:,</span><span class="n">idx</span><span class="p">]</span>
+                <span class="k">assert</span> <span class="n">np</span><span class="o">.</span><span class="n">allclose</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">p_i</span> <span class="o">*</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">S2</span> <span class="o">@</span> <span class="bp">self</span><span class="o">.</span><span class="n">Coca</span><span class="p">[:,</span><span class="n">idx</span><span class="p">])),</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">LHS</span><span class="p">,</span><span class="n">p_i</span><span class="p">)</span><span class="o">-</span><span class="n">g</span><span class="p">[:,</span> <span class="n">idx</span><span class="p">]),</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">g</span><span class="p">[:,</span> <span class="n">idx</span><span class="p">]</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">Coca</span><span class="p">[:,</span><span class="n">idx</span><span class="p">])],</span> <span class="mi">0</span><span class="p">,</span> <span class="n">atol</span><span class="o">=</span><span class="mf">1e-4</span><span class="p">)</span>
+                <span class="n">grad_temp</span> <span class="o">+=</span> <span class="n">p_i</span><span class="p">[:,</span> <span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">]</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">Coca</span><span class="p">[:,</span><span class="n">idx</span><span class="p">]</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">grad</span> <span class="o">=</span> <span class="n">contract</span><span class="p">(</span><span class="s2">&quot;ij,ijk-&gt;k&quot;</span><span class="p">,</span> <span class="n">grad_temp</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">S3</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">grad_temp_a</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">nbf</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">nbf</span><span class="p">))</span>
+            <span class="n">g_a</span> <span class="o">=</span> <span class="mi">4</span> <span class="o">*</span> <span class="n">contract</span><span class="p">(</span><span class="s2">&quot;ijkl,ij,km-&gt;lm&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">S4</span><span class="p">,</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Dt</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">Da</span><span class="p">)</span> <span class="o">+</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Dt</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">Db</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">Coca</span><span class="p">)</span>  <span class="c1"># shape (ao, mo)</span>
+            <span class="n">u_a</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">contract</span><span class="p">(</span><span class="s2">&quot;lm,lm-&gt;m&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">Coca</span><span class="p">,</span> <span class="n">g_a</span><span class="p">)</span>  <span class="c1"># shape (mo, )</span>
+            <span class="n">g_a</span> <span class="o">-=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">contract</span><span class="p">(</span><span class="s1">&#39;m,ij,jm-&gt;im&#39;</span><span class="p">,</span> <span class="n">u_a</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">S2</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">Coca</span><span class="p">)</span> <span class="c1"># shape (ao, mo)</span>
+            <span class="k">for</span> <span class="n">idx</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nalpha</span><span class="p">):</span>
+                <span class="n">LHS</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">Fock</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">S2</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">eigvecs_a</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span>
+                <span class="n">p_i</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">LHS</span><span class="p">,</span> <span class="n">g_a</span><span class="p">[:,</span> <span class="n">idx</span><span class="p">])</span>
+                <span class="c1"># Gram–Schmidt rotation</span>
+                <span class="n">p_i</span> <span class="o">-=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">p_i</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">S2</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">Coca</span><span class="p">[:,</span><span class="n">idx</span><span class="p">]))</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">Coca</span><span class="p">[:,</span><span class="n">idx</span><span class="p">]</span>
+                <span class="k">assert</span> <span class="n">np</span><span class="o">.</span><span class="n">allclose</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">p_i</span> <span class="o">*</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">S2</span> <span class="o">@</span> <span class="bp">self</span><span class="o">.</span><span class="n">Coca</span><span class="p">[:,</span><span class="n">idx</span><span class="p">])),</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">LHS</span><span class="p">,</span><span class="n">p_i</span><span class="p">)</span><span class="o">-</span><span class="n">g_a</span><span class="p">[:,</span> <span class="n">idx</span><span class="p">]),</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">g_a</span><span class="p">[:,</span> <span class="n">idx</span><span class="p">]</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">Coca</span><span class="p">[:,</span><span class="n">idx</span><span class="p">])],</span> <span class="mi">0</span><span class="p">,</span> <span class="n">atol</span><span class="o">=</span><span class="mf">1e-4</span><span class="p">)</span>
+                <span class="n">grad_temp_a</span> <span class="o">+=</span> <span class="n">p_i</span><span class="p">[:,</span> <span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">]</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">Coca</span><span class="p">[:,</span><span class="n">idx</span><span class="p">]</span>
+
+            <span class="n">grad_temp_b</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">nbf</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">nbf</span><span class="p">))</span>
+            <span class="n">g_b</span> <span class="o">=</span> <span class="mi">4</span> <span class="o">*</span> <span class="n">contract</span><span class="p">(</span><span class="s2">&quot;ijkl,ij,km-&gt;lm&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">S4</span><span class="p">,</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Dt</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">Da</span><span class="p">)</span> <span class="o">+</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Dt</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">Db</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">Cocb</span><span class="p">)</span>  <span class="c1"># shape (ao, mo)</span>
+            <span class="n">u_b</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">contract</span><span class="p">(</span><span class="s2">&quot;lm,lm-&gt;m&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">Cocb</span><span class="p">,</span> <span class="n">g_b</span><span class="p">)</span>  <span class="c1"># shape (mo, )</span>
+            <span class="n">g_b</span> <span class="o">-=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">contract</span><span class="p">(</span><span class="s1">&#39;m,ij,jm-&gt;im&#39;</span><span class="p">,</span> <span class="n">u_b</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">S2</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">Cocb</span><span class="p">)</span> <span class="c1"># shape (ao, mo)</span>
+            <span class="k">for</span> <span class="n">idx</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nbeta</span><span class="p">):</span>
+                <span class="n">LHS</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">Fock</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">S2</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">eigvecs_b</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span>
+                <span class="n">p_i</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">LHS</span><span class="p">,</span> <span class="n">g_b</span><span class="p">[:,</span> <span class="n">idx</span><span class="p">])</span>
+                <span class="c1"># Gram–Schmidt rotation</span>
+                <span class="n">p_i</span> <span class="o">-=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">p_i</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">S2</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">Cocb</span><span class="p">[:,</span><span class="n">idx</span><span class="p">]))</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">Cocb</span><span class="p">[:,</span><span class="n">idx</span><span class="p">]</span>
+                <span class="k">assert</span> <span class="n">np</span><span class="o">.</span><span class="n">allclose</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">p_i</span> <span class="o">*</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">S2</span> <span class="o">@</span> <span class="bp">self</span><span class="o">.</span><span class="n">Cocb</span><span class="p">[:,</span><span class="n">idx</span><span class="p">])),</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">LHS</span><span class="p">,</span><span class="n">p_i</span><span class="p">)</span><span class="o">-</span><span class="n">g_b</span><span class="p">[:,</span> <span class="n">idx</span><span class="p">]),</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">g_b</span><span class="p">[:,</span> <span class="n">idx</span><span class="p">]</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">Cocb</span><span class="p">[:,</span><span class="n">idx</span><span class="p">])],</span> <span class="mi">0</span><span class="p">,</span> <span class="n">atol</span><span class="o">=</span><span class="mf">1e-4</span><span class="p">)</span>
+                <span class="n">grad_temp_b</span> <span class="o">+=</span> <span class="n">p_i</span><span class="p">[:,</span> <span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">]</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">Cocb</span><span class="p">[:,</span><span class="n">idx</span><span class="p">]</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">grad</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="n">contract</span><span class="p">(</span><span class="s2">&quot;ij,ijk-&gt;k&quot;</span><span class="p">,</span> <span class="n">grad_temp_a</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">S3</span><span class="p">),</span> <span class="n">contract</span><span class="p">(</span><span class="s2">&quot;ij,ijk-&gt;k&quot;</span><span class="p">,</span> <span class="n">grad_temp_b</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">S3</span><span class="p">)))</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">lambda_reg</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">T</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">T_pbs</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">ref</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">rgl_vector</span> <span class="o">=</span> <span class="mi">4</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">lambda_reg</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">T</span><span class="p">,</span> <span class="n">v</span><span class="p">[:</span><span class="bp">self</span><span class="o">.</span><span class="n">npbs</span><span class="p">])</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">grad</span> <span class="o">+=</span> <span class="n">rgl_vector</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">grad</span><span class="p">[:</span><span class="bp">self</span><span class="o">.</span><span class="n">npbs</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">2</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">lambda_reg</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">T</span><span class="p">,</span> <span class="n">v</span><span class="p">[:</span><span class="bp">self</span><span class="o">.</span><span class="n">npbs</span><span class="p">])</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">grad</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">npbs</span><span class="p">:]</span> <span class="o">+=</span> <span class="mi">2</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">lambda_reg</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">T</span><span class="p">,</span> <span class="n">v</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">npbs</span><span class="p">:])</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">grad</span></div>
+
+<div class="viewcode-block" id="PDECO.find_regularization_constant_pdeco"><a class="viewcode-back" href="../../../api/n2v.PDECO.html#n2v.PDECO.find_regularization_constant_pdeco">[docs]</a>    <span class="k">def</span> <span class="nf">find_regularization_constant_pdeco</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">opt_max_iter</span><span class="p">,</span> <span class="n">opt_method</span><span class="o">=</span><span class="s2">&quot;L-BFGS-B&quot;</span><span class="p">,</span> <span class="n">gtol</span><span class="o">=</span><span class="mf">1e-3</span><span class="p">,</span>
+                                     <span class="n">opt</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">lambda_list</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Finding regularization constant lambda.</span>
+
+<span class="sd">        Note: it is recommend to set a specific convergence criteria by opt or tol,</span>
+<span class="sd">                in order to control the same convergence</span>
+<span class="sd">                for different lambda value.</span>
+
+<span class="sd">        After the calculation is done, one can plot the returns to select a good lambda.</span>
+
+<span class="sd">        Parameters:</span>
+<span class="sd">        -----------</span>
+<span class="sd">        guide_potential_components: a list of string</span>
+<span class="sd">            the components for guide potential v_pbs.</span>
+<span class="sd">            see Inverter.generate_components() for details.</span>
+
+<span class="sd">        opt_method: string default: &quot;trust-krylov&quot;</span>
+<span class="sd">            opt_methods available in scipy.optimize.minimize</span>
+
+<span class="sd">        tol: float</span>
+<span class="sd">            Tolerance for termination. See scipy.optimize.minimize for details.</span>
+
+<span class="sd">        opt: dictionary, optional</span>
+<span class="sd">            if given:</span>
+<span class="sd">                scipy.optimize.minimize(method=opt_method, options=opt)</span>
+
+<span class="sd">        lambda_list: np.ndarray, optional</span>
+<span class="sd">            A array of lambda to search; otherwise, it will be 10 ** np.linspace(-1, -7, 7).</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">        --------</span>
+<span class="sd">        lambda_list: np.ndarray</span>
+<span class="sd">            A array of lambda searched.</span>
+
+<span class="sd">        P_list: np.ndarray</span>
+<span class="sd">            The value defined by [Bulat, Heaton-Burgess, Cohen, Yang 2007] eqn (21).</span>
+<span class="sd">            Corresponding to lambda in lambda_list.</span>
+
+<span class="sd">        error_list: np.ndarray</span>
+<span class="sd">            The Ts value for each lambda.</span>
+
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">error_list</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">v_norm_list</span> <span class="o">=</span> <span class="p">[]</span>
+
+
+        <span class="k">if</span> <span class="n">lambda_list</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">lambda_list</span> <span class="o">=</span> <span class="mi">10</span> <span class="o">**</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="o">-</span><span class="mi">3</span><span class="p">,</span> <span class="o">-</span><span class="mi">9</span><span class="p">,</span> <span class="mi">7</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">opt</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">opt</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;disp&quot;</span>    <span class="p">:</span> <span class="kc">False</span><span class="p">}</span>
+        <span class="n">opt</span><span class="p">[</span><span class="s1">&#39;maxiter&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">opt_max_iter</span>
+        <span class="n">opt</span><span class="p">[</span><span class="s1">&#39;gtol&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">gtol</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">lambda_reg</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="c1"># Initial calculation with no regularization</span>
+        <span class="c1"># Initialization for D and C</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_diagonalize_with_potential_pbs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">v_pbs</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">opt_method</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s1">&#39;bfgs&#39;</span> <span class="ow">or</span> <span class="n">opt_method</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s1">&#39;l-bfgs-b&#39;</span><span class="p">:</span>
+            <span class="n">initial_result</span> <span class="o">=</span> <span class="n">minimize</span><span class="p">(</span><span class="n">fun</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">lagrangian_pbeco</span><span class="p">,</span>
+                                   <span class="n">x0</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">v_pbs</span><span class="p">,</span>
+                                   <span class="n">jac</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">gradient_pbeco</span><span class="p">,</span>
+                                   <span class="n">method</span><span class="o">=</span><span class="n">opt_method</span><span class="p">,</span>
+                                   <span class="n">options</span><span class="o">=</span><span class="n">opt</span>
+                                   <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">F</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">opt_method</span><span class="si">}</span><span class="s1"> is not supported. Only BFGS &#39;</span>
+                             <span class="sa">F</span><span class="s1">&#39;and L-BFGS is supported.&#39;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">initial_result</span><span class="o">.</span><span class="n">success</span> <span class="o">==</span> <span class="kc">False</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Optimization was unsucessful (|grad|=</span><span class="si">%.2e</span><span class="s2">) within </span><span class="si">%i</span><span class="s2"> iterations, &quot;</span>
+                             <span class="s2">&quot;try a different intitial guess&quot;</span><span class="o">%</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">initial_result</span><span class="o">.</span><span class="n">jac</span><span class="p">),</span> <span class="n">initial_result</span><span class="o">.</span><span class="n">nit</span><span class="p">)</span>
+                             <span class="o">+</span> <span class="n">initial_result</span><span class="o">.</span><span class="n">message</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">error0</span> <span class="o">=</span> <span class="o">-</span><span class="n">initial_result</span><span class="o">.</span><span class="n">fun</span>
+            <span class="n">initial_v_pbs</span> <span class="o">=</span> <span class="n">initial_result</span><span class="o">.</span><span class="n">x</span>  <span class="c1"># This is used as the initial guess for with regularization calculation.</span>
+
+        <span class="k">for</span> <span class="n">reg</span> <span class="ow">in</span> <span class="n">lambda_list</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">lambda_reg</span> <span class="o">=</span> <span class="n">reg</span>
+
+            <span class="k">if</span> <span class="n">opt_method</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s1">&#39;bfgs&#39;</span> <span class="ow">or</span> <span class="n">opt_method</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s1">&#39;l-bfgs-b&#39;</span><span class="p">:</span>
+                <span class="n">opt_results</span> <span class="o">=</span> <span class="n">minimize</span><span class="p">(</span><span class="n">fun</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">lagrangian_pbeco</span><span class="p">,</span>
+                                       <span class="n">x0</span><span class="o">=</span><span class="n">initial_v_pbs</span><span class="p">,</span>
+                                       <span class="n">jac</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">gradient_pbeco</span><span class="p">,</span>
+                                       <span class="n">method</span><span class="o">=</span><span class="n">opt_method</span><span class="p">,</span>
+                                       <span class="n">options</span><span class="o">=</span><span class="n">opt</span>
+                                       <span class="p">)</span>
+
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">F</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">opt_method</span><span class="si">}</span><span class="s1"> is not supported. Only BFGS &#39;</span>
+                                 <span class="sa">F</span><span class="s1">&#39;and L-BFGS is supported.&#39;</span><span class="p">)</span>
+
+
+            <span class="n">v_norm_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">regul_norm</span><span class="p">)</span>
+            <span class="n">error_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">opt_results</span><span class="o">.</span><span class="n">fun</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">lambda_reg</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">regul_norm</span><span class="p">)</span>
+
+        <span class="n">P_list</span> <span class="o">=</span> <span class="n">lambda_list</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">v_norm_list</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">error_list</span><span class="p">)</span> <span class="o">-</span> <span class="n">error0</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">lambda_list</span><span class="p">,</span> <span class="n">P_list</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">error_list</span><span class="p">)</span></div></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2020, Wasserman Group.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

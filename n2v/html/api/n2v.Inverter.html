@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#2D2D2D" />
+  
+  <title>n2v :: Inverter</title>
+  
+
+  <link rel="icon" type="image/png" sizes="32x32" href="../_static/img/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="../_static/img/favicon-16x16.png">
+  <link rel="index" title="Index" href="../genindex.html"/>
+
+  <link rel="stylesheet" href="../_static/css/insegel.css"/>
+  <link rel="stylesheet" href="../_static/css/custom.css"/>
+
+  <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+      <script type="text/javascript" src="../_static/jquery.js"></script>
+      <script type="text/javascript" src="../_static/underscore.js"></script>
+      <script type="text/javascript" src="../_static/doctools.js"></script>
+  
+
+  <script src="https://email.tl.fortawesome.com/c/eJxNjUEOgyAQAF8jR7Kw6wIHDh7sP1Cw2mgxgmn6-3JsMqc5zEQfE8dkxOY1KKMUOI3ACFKRJpSW2AAp7ontYIaxI6i7XPJVwyeVfCQ550Os3jLrGSNOLgbdAy6s0PBk2TFNjEbsfq31LB0OnX407pJa5v2faRadwSW63mn5KuLyR9j2tgx3zecanl-55R_-jjPs"></script> 
+</head>
+
+<body>
+  <div id="insegel-container">
+    <header>
+      <div id="logo-container">
+          
+          <a href="../index.html"><img src="../_static/logo_nameless_png.png"></a>
+          
+      </div>
+      <div id="project-container">
+        
+        <h1>n2v Documentation</h1>
+        
+      </div>
+    </header>
+
+    <div id="content-container">
+
+      <div id="main-content-container">
+        <div id="main-content" role="main">
+          
+  <div class="section" id="inverter">
+<h1>Inverter<a class="headerlink" href="#inverter" title="Permalink to this headline">¶</a></h1>
+<dl class="py class">
+<dt id="n2v.Inverter">
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">n2v.</span></code><code class="sig-name descname"><span class="pre">Inverter</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">wfn</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pbs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'same'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">debug</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/n2v/inverter.html#Inverter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#n2v.Inverter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">n2v.methods.direct.Direct</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">n2v.methods.wuyang.WuYang</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">n2v.methods.zmp.ZMP</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">n2v.methods.mrks.MRKS</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">n2v.methods.oucarter.OC</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">n2v.methods.pdeco.PDECO</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">n2v.grid.grider.Grider</span></code></p>
+<dl class="simple">
+<dt>wfn<span class="classifier">psi4.core.{RHF, UHF, RKS, UKS, Wavefunction, CCWavefuncion…}</span></dt><dd><p>Psi4 wavefunction object</p>
+</dd>
+<dt>mol<span class="classifier">psi4.core.Molecule</span></dt><dd><p>Psi4 molecule object</p>
+</dd>
+<dt>basis<span class="classifier">psi4.core.BasisSet</span></dt><dd><p>Psi4 basis set object</p>
+</dd>
+<dt>basis_str<span class="classifier">str</span></dt><dd><p>Basis set</p>
+</dd>
+<dt>nbf<span class="classifier">int</span></dt><dd><p>Number of basis functions for main calculation</p>
+</dd>
+<dt>nalpha<span class="classifier">int</span></dt><dd><p>Number of alpha electrons</p>
+</dd>
+<dt>nbeta<span class="classifier">int</span></dt><dd><p>Number of beta electrons</p>
+</dd>
+<dt>ref<span class="classifier">{1,2}</span></dt><dd><p>Reference calculation
+1 -&gt; Restricted
+2 -&gt; Unrestricted</p>
+</dd>
+<dt>Dt<span class="classifier">List</span></dt><dd><p>List of psi4.core.Matrix for target density matrices (on AO).</p>
+</dd>
+<dt>ct<span class="classifier">List</span></dt><dd><p>List of psi4.core.Matrix for input occupied orbitals. This might not be correct for post-HartreeFock methods.</p>
+</dd>
+<dt>pbs_str: string</dt><dd><p>name of Potential basis set</p>
+</dd>
+<dt>pbs<span class="classifier">psi4.core.BasisSet</span></dt><dd><p>Potential basis set.</p>
+</dd>
+<dt>npbs<span class="classifier">int</span></dt><dd><p>the length of pbs</p>
+</dd>
+<dt>v_pbs<span class="classifier">np.ndarray shape (npbs, ) for ref==1 and (2*npbs, ) for ref==2.</span></dt><dd><p>potential vector on the Potential Baiss Set.
+If the potential is not represented on the basis set, this should
+remain 0. It will be initialized to a 0 array. One can set this
+value for initial guesses before Wu-Yang method (WY) or PDE-Constrained
+Optimization method (PDE-CO). For example, if PDE-CO is ran after
+a WY calculation, the initial for PDE-CO will be the result of WY
+if v_pbs is not zeroed.</p>
+</dd>
+<dt>S2<span class="classifier">np.ndarray</span></dt><dd><p>The ao overlap matrix (i.e. S matrix)</p>
+</dd>
+<dt>S3<span class="classifier">np.ndarray</span></dt><dd><p>The three ao overlap matrix (ao, ao, pbs)</p>
+</dd>
+<dt>S4<span class="classifier">np.ndarray</span></dt><dd><p>The four ao overlap matrix, the size should be (ao, ao, ao, ao)</p>
+</dd>
+<dt>jk<span class="classifier">psi4.core.JK</span></dt><dd><p>Psi4 jk object. Built if wfn has no jk, otherwise use wfn.jk</p>
+</dd>
+<dt>T<span class="classifier">np.ndarray</span></dt><dd><p>kinetic matrix on ao</p>
+</dd>
+<dt>V<span class="classifier">np.ndarray</span></dt><dd><p>external potential matrix on ao</p>
+</dd>
+<dt>T_pbs: np.ndarray</dt><dd><p>kinetic matrix on pbs. Useful for regularization.</p>
+</dd>
+<dt>guide_potential_components: list of string</dt><dd><p>guide potential components name</p>
+</dd>
+<dt>va, vb: np.ndarray of shape (nbasis, nbasis)</dt><dd><p>guide potential Fock matrix.</p>
+</dd>
+</dl>
+<p class="rubric">Methods Summary</p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#n2v.Inverter.diagonalize" title="n2v.Inverter.diagonalize"><code class="xref py py-obj docutils literal notranslate"><span class="pre">diagonalize</span></code></a>(matrix, ndocc)</p></td>
+<td><p>Diagonalizes Fock Matrix</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#n2v.Inverter.finalize_energy" title="n2v.Inverter.finalize_energy"><code class="xref py py-obj docutils literal notranslate"><span class="pre">finalize_energy</span></code></a>()</p></td>
+<td><p>Calculates energy contributions</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#n2v.Inverter.form_jk" title="n2v.Inverter.form_jk"><code class="xref py py-obj docutils literal notranslate"><span class="pre">form_jk</span></code></a>(Cocc_a, Cocc_b)</p></td>
+<td><p>Generates Coulomb and Exchange matrices from occupied orbitals</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#n2v.Inverter.generate_components" title="n2v.Inverter.generate_components"><code class="xref py py-obj docutils literal notranslate"><span class="pre">generate_components</span></code></a>(guide_potential_components)</p></td>
+<td><p>Generates exact potential components to be added to the Hamiltonian to aide in the inversion procedure.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#n2v.Inverter.generate_jk" title="n2v.Inverter.generate_jk"><code class="xref py py-obj docutils literal notranslate"><span class="pre">generate_jk</span></code></a>([gen_K])</p></td>
+<td><p>Creates jk object for generation of Coulomb and Exchange matrices 1.0e9 B -&gt; 1.0 GB</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#n2v.Inverter.generate_mints_matrices" title="n2v.Inverter.generate_mints_matrices"><code class="xref py py-obj docutils literal notranslate"><span class="pre">generate_mints_matrices</span></code></a>()</p></td>
+<td><p>Generates matrices that are methods of a mints object</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#n2v.Inverter.invert" title="n2v.Inverter.invert"><code class="xref py py-obj docutils literal notranslate"><span class="pre">invert</span></code></a>(method[, guide_potential_components, …])</p></td>
+<td><p>Handler to all available inversion methods</p></td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Methods Documentation</p>
+<dl class="py method">
+<dt id="n2v.Inverter.diagonalize">
+<code class="sig-name descname"><span class="pre">diagonalize</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">matrix</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ndocc</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/n2v/inverter.html#Inverter.diagonalize"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#n2v.Inverter.diagonalize" title="Permalink to this definition">¶</a></dt>
+<dd><p>Diagonalizes Fock Matrix</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>marrix</strong> (<em>np.ndarray</em>) – Matrix to be diagonalized</p></li>
+<li><p><strong>ndocc</strong> (<em>int</em>) – Number of occupied orbitals</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><strong>C</strong> (<em>np.ndarray</em>) – Orbital Matrix</p></li>
+<li><p><strong>Cocc</strong> (<em>np.ndarray</em>) – Occupied Orbital Matrix</p></li>
+<li><p><strong>D</strong> (<em>np.ndarray</em>) – Density Matrix</p></li>
+<li><p><strong>eigves</strong> (<em>np.ndarray</em>) – Eigenvalues</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="n2v.Inverter.finalize_energy">
+<code class="sig-name descname"><span class="pre">finalize_energy</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/n2v/inverter.html#Inverter.finalize_energy"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#n2v.Inverter.finalize_energy" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculates energy contributions</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="n2v.Inverter.form_jk">
+<code class="sig-name descname"><span class="pre">form_jk</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Cocc_a</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Cocc_b</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/n2v/inverter.html#Inverter.form_jk"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#n2v.Inverter.form_jk" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generates Coulomb and Exchange matrices from occupied orbitals</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="n2v.Inverter.generate_components">
+<code class="sig-name descname"><span class="pre">generate_components</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">guide_potential_components</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/n2v/inverter.html#Inverter.generate_components"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#n2v.Inverter.generate_components" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generates exact potential components to be added to
+the Hamiltonian to aide in the inversion procedure.</p>
+<dl class="simple">
+<dt>guide_potential_components: list</dt><dd><p>Components added as to guide inversion.
+Can be chosen from {“fermi_amandi”, “svwn”}</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="n2v.Inverter.generate_jk">
+<code class="sig-name descname"><span class="pre">generate_jk</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">gen_K</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/n2v/inverter.html#Inverter.generate_jk"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#n2v.Inverter.generate_jk" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates jk object for generation of Coulomb and Exchange matrices
+1.0e9 B -&gt; 1.0 GB</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="n2v.Inverter.generate_mints_matrices">
+<code class="sig-name descname"><span class="pre">generate_mints_matrices</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/n2v/inverter.html#Inverter.generate_mints_matrices"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#n2v.Inverter.generate_mints_matrices" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generates matrices that are methods of a mints object</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="n2v.Inverter.invert">
+<code class="sig-name descname"><span class="pre">invert</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">method</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">guide_potential_components</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">['fermi_amaldi']</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">opt_max_iter</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">50</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">keywords</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/n2v/inverter.html#Inverter.invert"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#n2v.Inverter.invert" title="Permalink to this definition">¶</a></dt>
+<dd><blockquote>
+<div><p>Handler to all available inversion methods</p>
+<dl class="simple">
+<dt>method: str</dt><dd><p>Method used to invert density.
+Can be chosen from {wuyang, zmp, mrks, oc}.
+See documentation below for each method.</p>
+</dd>
+<dt>guide_potential_components: list, opt</dt><dd><p>Components added as to guide inversion.
+Can be chosen from {“fermi_amandi”, “svwn”}
+Default: [“fermi_amaldi”]</p>
+</dd>
+<dt>opt_max_iter: int, opt</dt><dd><p>Maximum number of iterations inside the chosen inversion.
+Default: 50</p>
+</dd>
+</dl>
+<p>Direct inversion of a set of Kohn-Sham equations.
+$$v_{xc}(r) =</p>
+</div></blockquote>
+<p>rac{1}{n(r)} sum_i^N [phi_i^{*} (r)
+abla^2 phi_i(r) +
+arepsilon_i | phi_i(r)|^2] $$</p>
+<blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><dl class="simple">
+<dt>grid: np.ndarray, opt</dt><dd><p>Grid where result will be expressed in.
+If not provided, dft grid will be used instead.</p>
+</dd>
+</dl>
+</div></blockquote>
+</div></blockquote>
+<p>the Wu-Yang method:
+The Journal of chemical physics 118.6 (2003): 2498-2509.</p>
+<blockquote>
+<div><blockquote>
+<div><dl class="simple">
+<dt>opt_max_iter: int</dt><dd><p>maximum iteration</p>
+</dd>
+<dt>opt_method: string, opt</dt><dd><p>Method for scipy optimizer
+Currently only used by wuyang and pdeco method.
+Defaul: ‘trust-krylov’
+<a class="reference external" href="https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.minimize.html">https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.minimize.html</a></p>
+</dd>
+<dt>reg<span class="classifier">float, opt</span></dt><dd><p>Regularization constant for Wuyant Inversion.
+Default: None -&gt; No regularization is added.
+Becomes attribute of inverter -&gt; inverter.lambda_reg</p>
+</dd>
+<dt>tol: float</dt><dd><p>tol for scipy.optimize.minimize</p>
+</dd>
+<dt>gtol: float</dt><dd><p>gtol for scipy.optimize.minimize: the gradient norm for
+convergence</p>
+</dd>
+<dt>opt: dict</dt><dd><dl class="simple">
+<dt>options for scipy.optimize.minimize</dt><dd><p>Notice that opt has lower priorities than opt_max_iter and gtol.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</div></blockquote>
+<dl class="simple">
+<dt>return:</dt><dd><p>the result are stored in self.v_pbs</p>
+</dd>
+</dl>
+</div></blockquote>
+<p>The Zhao-Morrison-Parr Method:
+Phys. Rev. A 50, 2138</p>
+<blockquote>
+<div><blockquote>
+<div><dl>
+<dt>lambda_list: list</dt><dd><p>List of Lamda parameters used as a coefficient for Hartree
+difference in SCF cycle.</p>
+</dd>
+<dt>zmp_mixing: float, optional</dt><dd><p>mixing in [0,1]. How much of the new potential is added in.
+For example, zmp_mixing = 0 means the traditional ZMP, i.e. all the potentials from previous
+smaller lambda are ignored.
+Zmp_mixing = 1 means that all the potentials of previous lambdas are accumulated, the larger lambda
+potential are meant to fix the wrong/inaccurate region of the potential of the sum of the previous
+potentials instead of providing an entire new potentials.
+default: 1</p>
+</dd>
+<dt>opt_max_iter: float</dt><dd><p>Maximum number of iterations for scf cycle</p>
+</dd>
+<dt>opt_tol: float</dt><dd><p>Convergence criteria set for Density Difference and DIIS error.</p>
+</dd>
+<dt>return:</dt><dd><p>The result will be stored in self.proto_density_a and self.proto_density_b
+For zmp_mixing==1, restricted (ref==1):</p>
+<blockquote>
+<div><p>self.proto_density_a = sum_i lambda_i * (Da_i - Dt[0]) - 1/N * (Dt[0])
+self.proto_density_b = sum_i lambda_i * (Db_i - Dt[1]) - 1/N * (Dt[1]);</p>
+</div></blockquote>
+<dl class="simple">
+<dt>unrestricted (ref==1):</dt><dd><p>self.proto_density_a = sum_i lambda_i * (Da_i - Dt[0]) - 1/N * (Dt[0] + Dt[1])
+self.proto_density_b = sum_i lambda_i * (Db_i - Dt[1]) - 1/N * (Dt[0] + Dt[1]);</p>
+</dd>
+<dt>For restricted (ref==1):</dt><dd><p>vxc = int dr’</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+<dl>
+<dt>rac{self.proto_density_a + self.proto_density_b}{<a href="#id1"><span class="problematic" id="id2">|r-r'|</span></a>}</dt><dd><p>= 2 * int dr’</p>
+</dd>
+<dt>rac{self.proto_density_a}{<a href="#id3"><span class="problematic" id="id4">|r-r'|</span></a>};</dt><dd><dl class="simple">
+<dt>for unrestricted (ref==2):</dt><dd><p>vxc_up = int dr’</p>
+</dd>
+</dl>
+</dd>
+<dt>rac{self.proto_density_a}{<a href="#id5"><span class="problematic" id="id6">|r-r'|</span></a>}</dt><dd><p>vxc_down = int dr’</p>
+</dd>
+<dt>rac{self.proto_density_b}{<a href="#id7"><span class="problematic" id="id8">|r-r'|</span></a>}.</dt><dd><blockquote>
+<div><dl>
+<dt>To get potential on grid, one needs to do</dt><dd><p>vxc = self.on_grid_esp(Da=self.proto_density_a, Db=self.proto_density_b, grid=grid) for restricted;
+vxc_up = self.on_grid_esp(Da=self.proto_density_a, Db=np.zeros_like(self.proto_density_a),</p>
+<blockquote>
+<div><p>grid=grid) for unrestricted;</p>
+</div></blockquote>
+</dd>
+</dl>
+</div></blockquote>
+<p>the modified Ryabinkin-Kohut-Staroverov method:
+Phys. Rev. Lett. 115, 083001
+J. Chem. Phys. 146, 084103p</p>
+<blockquote>
+<div><blockquote>
+<div><dl class="simple">
+<dt>maxiter: int</dt><dd><p>same as opt_max_iter</p>
+</dd>
+<dt>vxc_grid: np.ndarray of shape (3, num_grid_points), opt</dt><dd><p>When this is given, the final result will be represented</p>
+</dd>
+<dt>v_tol: float, opt</dt><dd><p>convergence criteria for vxc Fock matrices.
+default: 1e-4</p>
+</dd>
+<dt>D_tol: float, opt</dt><dd><p>convergence criteria for density matrices.
+default: 1e-7</p>
+</dd>
+<dt>eig_tol: float, opt</dt><dd><p>convergence criteria for occupied eigenvalue spectrum.
+default: 1e-4</p>
+</dd>
+<dt>frac_old: float, opt</dt><dd><p>Linear mixing parameter for current vxc and old vxc.
+If 0, no old vxc is mixed in.
+Should be in [0,1)
+default: 0.5.</p>
+</dd>
+<dt>init: string or psi4.core.Wavefunction, opt</dt><dd><p>Initial guess method.
+default: “SCAN”
+1) If None, input wfn info will be used as initial guess.
+2) If “continue” is given, then it will not initialize
+but use the densities and orbitals stored. Meaningly,
+one can run a quick WY calculation as the initial
+guess. This can also be used to user speficified
+initial guess by setting Da, Coca, eigvec_a.
+3) If it’s not continue, it would be expecting a
+method name string that works for psi4. A separate psi4 calculation
+would be performed.</p>
+</dd>
+<dt>sing: tuple of float of length 4, opt.</dt><dd><p>Singularity parameter for _vxc_hole_quadrature()
+default: (1e-5, 1e-4, 1e-5, 1e-4)
+[0]: atol, [1]: atol1 for dft_spherical grid calculation.
+[2]: atol, [3]: atol1 for vxc_grid calculation.</p>
+</dd>
+</dl>
+</div></blockquote>
+<dl class="simple">
+<dt>return:</dt><dd><p>The result will be stored in self.grid.vxc</p>
+</dd>
+</dl>
+</div></blockquote>
+<p>Ou-Carter method
+J. Chem. Theory Comput. 2018, 14, 5680−5689</p>
+<blockquote>
+<div><blockquote>
+<div><dl class="simple">
+<dt>maxiter: int</dt><dd><p>same as opt_max_iter</p>
+</dd>
+<dt>vxc_grid: np.ndarray of shape (3, num_grid_points)</dt><dd><p>The final result will be represented on this grid
+default: 1e-4</p>
+</dd>
+<dt>D_tol: float, opt</dt><dd><p>convergence criteria for density matrices.
+default: 1e-7</p>
+</dd>
+<dt>eig_tol: float, opt</dt><dd><p>convergence criteria for occupied eigenvalue spectrum.
+default: 1e-4</p>
+</dd>
+<dt>frac_old: float, opt</dt><dd><p>Linear mixing parameter for current vxc and old vxc.
+If 0, no old vxc is mixed in.
+Should be in [0,1)
+default: 0.5.</p>
+</dd>
+<dt>init: string, opt</dt><dd><p>Initial guess method.
+default: “SCAN”
+1) If None, input wfn info will be used as initial guess.
+2) If “continue” is given, then it will not initialize
+but use the densities and orbitals stored. Meaningly,
+one can run a quick WY calculation as the initial
+guess. This can also be used to user speficified
+initial guess by setting Da, Coca, eigvec_a.
+3) If it’s not continue, it would be expecting a
+method name string that works for psi4. A separate psi4 calculation
+would be performed.
+wuyang</p>
+</dd>
+</dl>
+</div></blockquote>
+</div></blockquote>
+<p>the PDE-Constrained Optimization method:
+Int J Quantum Chem. 2018;118:e25425;
+Nat Commun 10, 4497 (2019).</p>
+<blockquote>
+<div><blockquote>
+<div><dl class="simple">
+<dt>opt_max_iter: int</dt><dd><p>maximum iteration</p>
+</dd>
+<dt>opt_method: string, opt</dt><dd><p>Method for scipy optimizer
+Currently only used by wuyang and pdeco method.
+Defaul: ‘L-BFGS-B’
+Options: [‘L-BFGS-B’, ‘BFGS’]
+<a class="reference external" href="https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.minimize.html">https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.minimize.html</a></p>
+</dd>
+<dt>reg<span class="classifier">float, opt</span></dt><dd><p>Regularization constant for Wuyant Inversion.
+Default: None -&gt; No regularization is added.
+Becomes attribute of inverter -&gt; inverter.lambda_reg</p>
+</dd>
+<dt>gtol: float</dt><dd><p>gtol for scipy.optimize.minimize: the gradient norm for
+convergence</p>
+</dd>
+<dt>opt: dict</dt><dd><p>options for scipy.optimize.minimize
+Notice that opt has lower priorities than opt_max_iter and gtol.</p>
+</dd>
+</dl>
+</div></blockquote>
+<dl class="simple">
+<dt>return:</dt><dd><p>the result are stored in self.v_pbs</p>
+</dd>
+</dl>
+</div></blockquote>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+        </div>
+      </div>
+
+      <div id="side-menu-container">
+
+        <div id="search" role="search">
+        <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+            <input type="text" name="q" placeholder="Search..." />
+            <input type="hidden" name="check_keywords" value="yes" />
+            <input type="hidden" name="area" value="default" />
+        </form>
+</div>
+
+        <div id="side-menu" role="navigation">
+
+          
+  
+    
+  
+  
+    <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../install.html"><strong>Installation</strong></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../first_steps.html"><strong>First Steps</strong></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../on_the_grid.html"><strong>On the Grid</strong></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../invert.html"><strong>Inverting A Density</strong></a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../invert/direct.html">Direct</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../invert/zmp.html">ZMP</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../invert/wu_yang.html">Wu Yang</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../invert/ou_carter.html">Ou and Carter</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../invert/pdeco.html">PDE Constrained Optimization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../invert/mrks.html">Modified Ryabinkin-Kohut-Staroverov</a></li>
+</ul>
+</li>
+<li class="toctree-l1 current"><a class="reference internal" href="../api.html"><strong>API Documentation</strong></a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../api.html#module-n2v">n2v Package</a><ul class="current">
+<li class="toctree-l3 current"><a class="reference internal" href="../api.html#classes">Classes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../api.html#class-inheritance-diagram">Class Inheritance Diagram</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  
+
+
+        </div>
+
+        
+
+      </div>
+
+    </div>
+
+<footer>
+    <div id="footer-info">
+        <ul id="build-details">
+            
+                <li class="footer-element">
+                    
+                        <a href="../_sources/api/n2v.Inverter.rst.txt" rel="nofollow"> source</a>
+                    
+                </li>
+            
+
+            
+
+            
+        </ul>
+
+        
+            <div id="copyright">
+                &copy; 2020, Wasserman Group.
+            </div>
+        
+
+        <div id="credit">
+            created with <a href="http://sphinx-doc.org/">Sphinx</a> and <a href="https://github.com/Autophagy/insegel">Insegel</a>
+
+        </div>
+    </div>
+
+    <a id="menu-toggle" class="fa fa-bars" aria-hidden="true"></a>
+
+    <script type="text/javascript">
+      $("#menu-toggle").click(function() {
+        $("#menu-toggle").toggleClass("toggled");
+        $("#side-menu-container").slideToggle(300);
+      });
+    </script>
+
+</footer> 
+
+</div>
+
+</body>
+</html>

@@ -1,0 +1,754 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>n2v.inverter &mdash; n2v  documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/graphviz.css" type="text/css" />
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> n2v
+          
+
+          
+            
+            <img src="../../_static/logo_nameless_png.png" class="logo" alt="Logo"/>
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../install.html"><strong>Installation</strong></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../first_steps.html"><strong>First Steps</strong></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../on_the_grid.html"><strong>On the Grid</strong></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../invert.html"><strong>Inverting A Density</strong></a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">n2v</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+        
+      <li>n2v.inverter</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for n2v.inverter</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">inverter.py</span>
+<span class="sd">Density-to-potential inversion module</span>
+
+<span class="sd">Handles the primary functions</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">dataclasses</span> <span class="kn">import</span> <span class="n">dataclass</span>
+<span class="kn">from</span> <span class="nn">opt_einsum</span> <span class="kn">import</span> <span class="n">contract</span>
+
+<span class="k">try</span><span class="p">:</span>
+    <span class="kn">import</span> <span class="nn">psi4</span>
+    <span class="n">psi4</span><span class="o">.</span><span class="n">core</span><span class="o">.</span><span class="n">be_quiet</span><span class="p">()</span>
+    <span class="n">psi4</span><span class="o">.</span><span class="n">core</span><span class="o">.</span><span class="n">clean</span><span class="p">()</span>
+<span class="k">except</span><span class="p">:</span>
+    <span class="k">pass</span>    
+
+<span class="kn">from</span> <span class="nn">.methods.wuyang</span> <span class="kn">import</span> <span class="n">WuYang</span>
+<span class="kn">from</span> <span class="nn">.methods.zmp</span> <span class="kn">import</span> <span class="n">ZMP</span>
+<span class="kn">from</span> <span class="nn">.methods.mrks</span> <span class="kn">import</span> <span class="n">MRKS</span>
+<span class="kn">from</span> <span class="nn">.methods.oucarter</span> <span class="kn">import</span> <span class="n">OC</span>
+<span class="kn">from</span> <span class="nn">.methods.pdeco</span> <span class="kn">import</span> <span class="n">PDECO</span>
+<span class="kn">from</span> <span class="nn">.methods.direct</span> <span class="kn">import</span> <span class="n">Direct</span>
+<span class="kn">from</span> <span class="nn">.grid.grider</span> <span class="kn">import</span> <span class="n">Grider</span>
+
+<div class="viewcode-block" id="data_bucket"><a class="viewcode-back" href="../../api/n2v.data_bucket.html#n2v.data_bucket">[docs]</a><span class="nd">@dataclass</span>
+<span class="k">class</span> <span class="nc">data_bucket</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Data class for storing grid attributes. </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">pass</span></div>
+
+
+<div class="viewcode-block" id="Inverter"><a class="viewcode-back" href="../../api/n2v.Inverter.html#n2v.Inverter">[docs]</a><span class="k">class</span> <span class="nc">Inverter</span><span class="p">(</span><span class="n">Direct</span><span class="p">,</span> <span class="n">WuYang</span><span class="p">,</span> <span class="n">ZMP</span><span class="p">,</span> <span class="n">MRKS</span><span class="p">,</span> <span class="n">OC</span><span class="p">,</span> <span class="n">PDECO</span><span class="p">,</span> <span class="n">Grider</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Attributes:</span>
+<span class="sd">    ----------</span>
+<span class="sd">    wfn : psi4.core.{RHF, UHF, RKS, UKS, Wavefunction, CCWavefuncion...}</span>
+<span class="sd">        Psi4 wavefunction object</span>
+<span class="sd">    mol : psi4.core.Molecule</span>
+<span class="sd">        Psi4 molecule object</span>
+<span class="sd">    basis : psi4.core.BasisSet</span>
+<span class="sd">        Psi4 basis set object</span>
+<span class="sd">    basis_str : str</span>
+<span class="sd">        Basis set</span>
+<span class="sd">    nbf : int</span>
+<span class="sd">        Number of basis functions for main calculation</span>
+<span class="sd">    nalpha : int</span>
+<span class="sd">        Number of alpha electrons</span>
+<span class="sd">    nbeta : int</span>
+<span class="sd">        Number of beta electrons</span>
+<span class="sd">    ref : {1,2}</span>
+<span class="sd">        Reference calculation</span>
+<span class="sd">        1 -&gt; Restricted</span>
+<span class="sd">        2 -&gt; Unrestricted</span>
+<span class="sd">    Dt : List</span>
+<span class="sd">        List of psi4.core.Matrix for target density matrices (on AO).</span>
+<span class="sd">    ct : List</span>
+<span class="sd">        List of psi4.core.Matrix for input occupied orbitals. This might not be correct for post-HartreeFock methods.</span>
+<span class="sd">    pbs_str: string</span>
+<span class="sd">        name of Potential basis set</span>
+<span class="sd">    pbs : psi4.core.BasisSet</span>
+<span class="sd">        Potential basis set.</span>
+<span class="sd">    npbs : int</span>
+<span class="sd">        the length of pbs</span>
+<span class="sd">    v_pbs : np.ndarray shape (npbs, ) for ref==1 and (2*npbs, ) for ref==2.</span>
+<span class="sd">        potential vector on the Potential Baiss Set.</span>
+<span class="sd">        If the potential is not represented on the basis set, this should</span>
+<span class="sd">        remain 0. It will be initialized to a 0 array. One can set this</span>
+<span class="sd">        value for initial guesses before Wu-Yang method (WY) or PDE-Constrained</span>
+<span class="sd">        Optimization method (PDE-CO). For example, if PDE-CO is ran after</span>
+<span class="sd">        a WY calculation, the initial for PDE-CO will be the result of WY</span>
+<span class="sd">        if v_pbs is not zeroed.</span>
+<span class="sd">    S2  : np.ndarray</span>
+<span class="sd">        The ao overlap matrix (i.e. S matrix)</span>
+<span class="sd">    S3  : np.ndarray</span>
+<span class="sd">        The three ao overlap matrix (ao, ao, pbs)</span>
+<span class="sd">    S4  : np.ndarray</span>
+<span class="sd">        The four ao overlap matrix, the size should be (ao, ao, ao, ao)</span>
+<span class="sd">    jk  : psi4.core.JK</span>
+<span class="sd">        Psi4 jk object. Built if wfn has no jk, otherwise use wfn.jk</span>
+
+<span class="sd">    T   : np.ndarray</span>
+<span class="sd">        kinetic matrix on ao</span>
+<span class="sd">    V   : np.ndarray</span>
+<span class="sd">        external potential matrix on ao</span>
+<span class="sd">    T_pbs: np.ndarray</span>
+<span class="sd">        kinetic matrix on pbs. Useful for regularization.</span>
+
+<span class="sd">    guide_potential_components: list of string</span>
+<span class="sd">        guide potential components name</span>
+<span class="sd">    va, vb: np.ndarray of shape (nbasis, nbasis)</span>
+<span class="sd">        guide potential Fock matrix.</span>
+<span class="sd">    Methods:</span>
+<span class="sd">    --------</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">wfn</span><span class="p">,</span> <span class="n">pbs</span><span class="o">=</span><span class="s2">&quot;same&quot;</span><span class="p">,</span> <span class="n">debug</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Handles Inversion</span>
+<span class="sd">        </span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        wfn : psi4.core.{RHF, UHF, RKS, UKS, Wavefunction, CCWavefuncion...}</span>
+<span class="sd">            Psi4 wavefunction object</span>
+<span class="sd">        pbs: str. default=&quot;same&quot;. If same, then the potential basis set (pbs)</span>
+<span class="sd">                 is the same as orbital basis set (i.e. ao). Notice that</span>
+<span class="sd">                 pbs is not needed for some methods</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">wfn</span>       <span class="o">=</span> <span class="n">wfn</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pbs_str</span>   <span class="o">=</span> <span class="n">pbs</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mol</span>       <span class="o">=</span> <span class="n">wfn</span><span class="o">.</span><span class="n">molecule</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">basis</span>     <span class="o">=</span> <span class="n">wfn</span><span class="o">.</span><span class="n">basisset</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">basis_str</span> <span class="o">=</span> <span class="n">wfn</span><span class="o">.</span><span class="n">basisset</span><span class="p">()</span><span class="o">.</span><span class="n">name</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nbf</span>       <span class="o">=</span> <span class="n">wfn</span><span class="o">.</span><span class="n">basisset</span><span class="p">()</span><span class="o">.</span><span class="n">nbf</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nalpha</span>    <span class="o">=</span> <span class="n">wfn</span><span class="o">.</span><span class="n">nalpha</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nbeta</span>     <span class="o">=</span> <span class="n">wfn</span><span class="o">.</span><span class="n">nbeta</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ref</span>       <span class="o">=</span> <span class="mi">1</span> <span class="k">if</span> <span class="n">psi4</span><span class="o">.</span><span class="n">core</span><span class="o">.</span><span class="n">get_global_option</span><span class="p">(</span><span class="s2">&quot;REFERENCE&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;RHF&quot;</span> <span class="ow">or</span> \
+                              <span class="n">psi4</span><span class="o">.</span><span class="n">core</span><span class="o">.</span><span class="n">get_global_option</span><span class="p">(</span><span class="s2">&quot;REFERENCE&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;RKS&quot;</span> <span class="k">else</span> <span class="mi">2</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">jk</span>        <span class="o">=</span> <span class="n">wfn</span><span class="o">.</span><span class="n">jk</span><span class="p">()</span> <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">wfn</span><span class="p">,</span> <span class="s2">&quot;jk&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="kc">True</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">generate_jk</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">Dt</span>        <span class="o">=</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">wfn</span><span class="o">.</span><span class="n">Da_subset</span><span class="p">(</span><span class="s2">&quot;AO&quot;</span><span class="p">)),</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">wfn</span><span class="o">.</span><span class="n">Db_subset</span><span class="p">(</span><span class="s2">&quot;AO&quot;</span><span class="p">)))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ct</span>        <span class="o">=</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">wfn</span><span class="o">.</span><span class="n">Ca_subset</span><span class="p">(</span><span class="s2">&quot;AO&quot;</span><span class="p">,</span> <span class="s2">&quot;OCC&quot;</span><span class="p">)),</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">wfn</span><span class="o">.</span><span class="n">Cb_subset</span><span class="p">(</span><span class="s2">&quot;AO&quot;</span><span class="p">,</span> <span class="s2">&quot;OCC&quot;</span><span class="p">)))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pbs</span>       <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">basis</span> <span class="k">if</span> <span class="n">pbs</span> <span class="o">==</span> <span class="s2">&quot;same&quot;</span> \
+                                    <span class="k">else</span> <span class="n">psi4</span><span class="o">.</span><span class="n">core</span><span class="o">.</span><span class="n">BasisSet</span><span class="o">.</span><span class="n">build</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">mol</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="s1">&#39;BASIS&#39;</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">pbs_str</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">npbs</span>      <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pbs</span><span class="o">.</span><span class="n">nbf</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">v_pbs</span>     <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">npbs</span><span class="p">)</span> <span class="p">)</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">ref</span> <span class="o">==</span> <span class="mi">1</span> \
+                                                 <span class="k">else</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span> <span class="mi">2</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">npbs</span> <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">generate_mints_matrices</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">grid</span> <span class="o">=</span> <span class="n">data_bucket</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cubic_grid</span> <span class="o">=</span> <span class="n">data_bucket</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">J0</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">S4</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># Entry to save the 4 overlap matrix.</span>
+
+    <span class="c1">#-------------&gt;  Basics:</span>
+
+<div class="viewcode-block" id="Inverter.generate_mints_matrices"><a class="viewcode-back" href="../../api/n2v.Inverter.html#n2v.Inverter.generate_mints_matrices">[docs]</a>    <span class="k">def</span> <span class="nf">generate_mints_matrices</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Generates matrices that are methods of a mints object</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">mints</span> <span class="o">=</span> <span class="n">psi4</span><span class="o">.</span><span class="n">core</span><span class="o">.</span><span class="n">MintsHelper</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">basis</span> <span class="p">)</span>
+
+        <span class="c1">#Overlap Matrices</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">S2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">mints</span><span class="o">.</span><span class="n">ao_overlap</span><span class="p">())</span>
+        <span class="n">A</span> <span class="o">=</span> <span class="n">mints</span><span class="o">.</span><span class="n">ao_overlap</span><span class="p">()</span>
+        <span class="n">A</span><span class="o">.</span><span class="n">power</span><span class="p">(</span> <span class="o">-</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">1e-16</span> <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">A</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">A</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">S3</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="n">mints</span><span class="o">.</span><span class="n">ao_3coverlap</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">basis</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">basis</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">pbs</span><span class="p">))</span>
+
+        <span class="c1">#Core Matrices</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">T</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">mints</span><span class="o">.</span><span class="n">ao_kinetic</span><span class="p">())</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">V</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">mints</span><span class="o">.</span><span class="n">ao_potential</span><span class="p">())</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">T_pbs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">mints</span><span class="o">.</span><span class="n">ao_kinetic</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pbs</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">pbs</span><span class="p">))</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="Inverter.generate_jk"><a class="viewcode-back" href="../../api/n2v.Inverter.html#n2v.Inverter.generate_jk">[docs]</a>    <span class="k">def</span> <span class="nf">generate_jk</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">gen_K</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Creates jk object for generation of Coulomb and Exchange matrices</span>
+<span class="sd">        1.0e9 B -&gt; 1.0 GB</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">jk</span> <span class="o">=</span> <span class="n">psi4</span><span class="o">.</span><span class="n">core</span><span class="o">.</span><span class="n">JK</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">basis</span><span class="p">)</span>
+        <span class="n">memory</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">jk</span><span class="o">.</span><span class="n">memory_estimate</span><span class="p">()</span> <span class="o">*</span> <span class="mf">1.1</span><span class="p">)</span>
+        <span class="n">jk</span><span class="o">.</span><span class="n">set_memory</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">memory</span><span class="p">))</span> 
+        <span class="n">jk</span><span class="o">.</span><span class="n">set_do_K</span><span class="p">(</span><span class="n">gen_K</span><span class="p">)</span>
+        <span class="n">jk</span><span class="o">.</span><span class="n">initialize</span><span class="p">()</span>
+
+        <span class="k">return</span> <span class="n">jk</span></div>
+
+<div class="viewcode-block" id="Inverter.form_jk"><a class="viewcode-back" href="../../api/n2v.Inverter.html#n2v.Inverter.form_jk">[docs]</a>    <span class="k">def</span> <span class="nf">form_jk</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">Cocc_a</span><span class="p">,</span> <span class="n">Cocc_b</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Generates Coulomb and Exchange matrices from occupied orbitals</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># if  self.jk.memory_estimate() &gt; psi4.get_memory() * 0.8:</span>
+        <span class="c1">#     raise ValueError(&quot;Requested JK will take too more memory than default. \n \</span>
+        <span class="c1">#                       Increase it with psi4.set_memory(int( Many More Bytes )))!&quot;)</span>
+        <span class="n">Cocc_a</span> <span class="o">=</span> <span class="n">psi4</span><span class="o">.</span><span class="n">core</span><span class="o">.</span><span class="n">Matrix</span><span class="o">.</span><span class="n">from_array</span><span class="p">(</span><span class="n">Cocc_a</span><span class="p">)</span>
+        <span class="n">Cocc_b</span> <span class="o">=</span> <span class="n">psi4</span><span class="o">.</span><span class="n">core</span><span class="o">.</span><span class="n">Matrix</span><span class="o">.</span><span class="n">from_array</span><span class="p">(</span><span class="n">Cocc_b</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">jk</span><span class="o">.</span><span class="n">C_left_add</span><span class="p">(</span><span class="n">Cocc_a</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">jk</span><span class="o">.</span><span class="n">C_left_add</span><span class="p">(</span><span class="n">Cocc_b</span><span class="p">)</span> 
+        <span class="bp">self</span><span class="o">.</span><span class="n">jk</span><span class="o">.</span><span class="n">compute</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">jk</span><span class="o">.</span><span class="n">C_clear</span><span class="p">()</span>
+
+        <span class="n">J</span> <span class="o">=</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">jk</span><span class="o">.</span><span class="n">J</span><span class="p">()[</span><span class="mi">0</span><span class="p">]),</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">jk</span><span class="o">.</span><span class="n">J</span><span class="p">()[</span><span class="mi">1</span><span class="p">]))</span>
+        <span class="n">K</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">return</span> <span class="n">J</span><span class="p">,</span> <span class="n">K</span></div>
+
+<div class="viewcode-block" id="Inverter.diagonalize"><a class="viewcode-back" href="../../api/n2v.Inverter.html#n2v.Inverter.diagonalize">[docs]</a>    <span class="k">def</span> <span class="nf">diagonalize</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">matrix</span><span class="p">,</span> <span class="n">ndocc</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Diagonalizes Fock Matrix</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        marrix: np.ndarray</span>
+<span class="sd">            Matrix to be diagonalized</span>
+<span class="sd">        ndocc: int</span>
+<span class="sd">            Number of occupied orbitals</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        C: np.ndarray</span>
+<span class="sd">            Orbital Matrix</span>
+<span class="sd">        Cocc: np.ndarray</span>
+<span class="sd">            Occupied Orbital Matrix</span>
+<span class="sd">        D: np.ndarray</span>
+<span class="sd">            Density Matrix</span>
+<span class="sd">        eigves: np.ndarray</span>
+<span class="sd">            Eigenvalues</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">A</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">A</span>
+        <span class="n">Fp</span> <span class="o">=</span> <span class="n">A</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">matrix</span><span class="p">)</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">A</span><span class="p">)</span>
+        <span class="n">eigvecs</span><span class="p">,</span> <span class="n">Cp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">eigh</span><span class="p">(</span><span class="n">Fp</span><span class="p">)</span>
+        <span class="n">C</span> <span class="o">=</span> <span class="n">A</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">Cp</span><span class="p">)</span>
+        <span class="n">Cocc</span> <span class="o">=</span> <span class="n">C</span><span class="p">[:,</span> <span class="p">:</span><span class="n">ndocc</span><span class="p">]</span>
+        <span class="n">D</span> <span class="o">=</span> <span class="n">contract</span><span class="p">(</span><span class="s1">&#39;pi,qi-&gt;pq&#39;</span><span class="p">,</span> <span class="n">Cocc</span><span class="p">,</span> <span class="n">Cocc</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">C</span><span class="p">,</span> <span class="n">Cocc</span><span class="p">,</span> <span class="n">D</span><span class="p">,</span> <span class="n">eigvecs</span></div>
+
+    <span class="c1">#-------------&gt;  Inversion:</span>
+
+<div class="viewcode-block" id="Inverter.invert"><a class="viewcode-back" href="../../api/n2v.Inverter.html#n2v.Inverter.invert">[docs]</a>    <span class="k">def</span> <span class="nf">invert</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">method</span><span class="p">,</span>
+                     <span class="n">guide_potential_components</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;fermi_amaldi&quot;</span><span class="p">],</span>
+                     <span class="n">opt_max_iter</span> <span class="o">=</span> <span class="mi">50</span><span class="p">,</span>
+                     <span class="o">**</span><span class="n">keywords</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Handler to all available inversion methods</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+
+<span class="sd">        method: str</span>
+<span class="sd">            Method used to invert density. </span>
+<span class="sd">            Can be chosen from {wuyang, zmp, mrks, oc}. </span>
+<span class="sd">            See documentation below for each method. </span>
+<span class="sd">        guide_potential_components: list, opt</span>
+<span class="sd">            Components added as to guide inversion. </span>
+<span class="sd">            Can be chosen from {&quot;fermi_amandi&quot;, &quot;svwn&quot;}</span>
+<span class="sd">            Default: [&quot;fermi_amaldi&quot;]</span>
+<span class="sd">        opt_max_iter: int, opt</span>
+<span class="sd">            Maximum number of iterations inside the chosen inversion.</span>
+<span class="sd">            Default: 50</span>
+
+<span class="sd">        direct</span>
+<span class="sd">        ------</span>
+<span class="sd">        Direct inversion of a set of Kohn-Sham equations. </span>
+<span class="sd">        $$v_{xc}(r) = \frac{1}{n(r)} \sum_i^N [\phi_i^{*} (r) \nabla^2 \phi_i(r) + \varepsilon_i | \phi_i(r)|^2] $$</span>
+<span class="sd">            Parameters:</span>
+<span class="sd">            -----------</span>
+<span class="sd">                grid: np.ndarray, opt</span>
+<span class="sd">                    Grid where result will be expressed in.</span>
+<span class="sd">                    If not provided, dft grid will be used instead. </span>
+<span class="sd">                </span>
+<span class="sd">        wuyang</span>
+<span class="sd">        ------</span>
+<span class="sd">        the Wu-Yang method:</span>
+<span class="sd">        The Journal of chemical physics 118.6 (2003): 2498-2509.</span>
+<span class="sd">            Parameters:</span>
+<span class="sd">            ----------</span>
+<span class="sd">                opt_max_iter: int</span>
+<span class="sd">                    maximum iteration</span>
+<span class="sd">                opt_method: string, opt</span>
+<span class="sd">                    Method for scipy optimizer</span>
+<span class="sd">                    Currently only used by wuyang and pdeco method.</span>
+<span class="sd">                    Defaul: &#39;trust-krylov&#39;</span>
+<span class="sd">                    https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.minimize.html</span>
+<span class="sd">                reg : float, opt</span>
+<span class="sd">                    Regularization constant for Wuyant Inversion.</span>
+<span class="sd">                    Default: None -&gt; No regularization is added.</span>
+<span class="sd">                    Becomes attribute of inverter -&gt; inverter.lambda_reg</span>
+<span class="sd">                tol: float</span>
+<span class="sd">                    tol for scipy.optimize.minimize</span>
+<span class="sd">                gtol: float</span>
+<span class="sd">                    gtol for scipy.optimize.minimize: the gradient norm for</span>
+<span class="sd">                    convergence</span>
+<span class="sd">                opt: dict</span>
+<span class="sd">                    options for scipy.optimize.minimize</span>
+<span class="sd">                                Notice that opt has lower priorities than opt_max_iter and gtol.</span>
+<span class="sd">            return:</span>
+<span class="sd">                the result are stored in self.v_pbs</span>
+
+<span class="sd">            </span>
+<span class="sd">        zmp</span>
+<span class="sd">        ---</span>
+<span class="sd">        The Zhao-Morrison-Parr Method:</span>
+<span class="sd">        Phys. Rev. A 50, 2138 </span>
+<span class="sd">            Parameters:</span>
+<span class="sd">            ----------</span>
+<span class="sd">                lambda_list: list</span>
+<span class="sd">                    List of Lamda parameters used as a coefficient for Hartree </span>
+<span class="sd">                    difference in SCF cycle.</span>
+<span class="sd">                zmp_mixing: float, optional</span>
+<span class="sd">                    mixing \in [0,1]. How much of the new potential is added in.</span>
+<span class="sd">                    For example, zmp_mixing = 0 means the traditional ZMP, i.e. all the potentials from previous</span>
+<span class="sd">                    smaller lambda are ignored.</span>
+<span class="sd">                    Zmp_mixing = 1 means that all the potentials of previous lambdas are accumulated, the larger lambda</span>
+<span class="sd">                    potential are meant to fix the wrong/inaccurate region of the potential of the sum of the previous</span>
+<span class="sd">                    potentials instead of providing an entire new potentials.</span>
+<span class="sd">                    default: 1</span>
+<span class="sd">                opt_max_iter: float</span>
+<span class="sd">                    Maximum number of iterations for scf cycle</span>
+<span class="sd">                opt_tol: float</span>
+<span class="sd">                    Convergence criteria set for Density Difference and DIIS error. </span>
+<span class="sd">                return:</span>
+<span class="sd">                    The result will be stored in self.proto_density_a and self.proto_density_b</span>
+<span class="sd">                    For zmp_mixing==1, restricted (ref==1):</span>
+<span class="sd">                        self.proto_density_a = \sum_i lambda_i * (Da_i - Dt[0]) - 1/N * (Dt[0])</span>
+<span class="sd">                        self.proto_density_b = \sum_i lambda_i * (Db_i - Dt[1]) - 1/N * (Dt[1]);</span>
+<span class="sd">                    unrestricted (ref==1):</span>
+<span class="sd">                        self.proto_density_a = \sum_i lambda_i * (Da_i - Dt[0]) - 1/N * (Dt[0] + Dt[1])</span>
+<span class="sd">                        self.proto_density_b = \sum_i lambda_i * (Db_i - Dt[1]) - 1/N * (Dt[0] + Dt[1]);</span>
+<span class="sd">                    For restricted (ref==1):</span>
+<span class="sd">                        vxc = \int dr&#39; \frac{self.proto_density_a + self.proto_density_b}{|r-r&#39;|}</span>
+<span class="sd">                            = 2 * \int dr&#39; \frac{self.proto_density_a}{|r-r&#39;|};</span>
+<span class="sd">                    for unrestricted (ref==2):</span>
+<span class="sd">                        vxc_up = \int dr&#39; \frac{self.proto_density_a}{|r-r&#39;|}</span>
+<span class="sd">                        vxc_down = \int dr&#39; \frac{self.proto_density_b}{|r-r&#39;|}.</span>
+<span class="sd">                    To get potential on grid, one needs to do</span>
+<span class="sd">                        vxc = self.on_grid_esp(Da=self.proto_density_a, Db=self.proto_density_b, grid=grid) for restricted;</span>
+<span class="sd">                        vxc_up = self.on_grid_esp(Da=self.proto_density_a, Db=np.zeros_like(self.proto_density_a),</span>
+<span class="sd">                                  grid=grid) for unrestricted;</span>
+
+
+<span class="sd">        mRKS</span>
+<span class="sd">        ----</span>
+<span class="sd">        the modified Ryabinkin-Kohut-Staroverov method:</span>
+<span class="sd">        Phys. Rev. Lett. 115, 083001 </span>
+<span class="sd">        J. Chem. Phys. 146, 084103p</span>
+<span class="sd">            Parameters:</span>
+<span class="sd">            -----------</span>
+<span class="sd">                maxiter: int</span>
+<span class="sd">                    same as opt_max_iter</span>
+<span class="sd">                vxc_grid: np.ndarray of shape (3, num_grid_points), opt</span>
+<span class="sd">                    When this is given, the final result will be represented</span>
+<span class="sd">                v_tol: float, opt</span>
+<span class="sd">                    convergence criteria for vxc Fock matrices.</span>
+<span class="sd">                    default: 1e-4</span>
+<span class="sd">                D_tol: float, opt</span>
+<span class="sd">                    convergence criteria for density matrices.</span>
+<span class="sd">                    default: 1e-7</span>
+<span class="sd">                eig_tol: float, opt</span>
+<span class="sd">                    convergence criteria for occupied eigenvalue spectrum.</span>
+<span class="sd">                    default: 1e-4</span>
+<span class="sd">                frac_old: float, opt</span>
+<span class="sd">                    Linear mixing parameter for current vxc and old vxc.</span>
+<span class="sd">                    If 0, no old vxc is mixed in.</span>
+<span class="sd">                    Should be in [0,1)</span>
+<span class="sd">                    default: 0.5.</span>
+<span class="sd">                init: string or psi4.core.Wavefunction, opt</span>
+<span class="sd">                    Initial guess method.</span>
+<span class="sd">                    default: &quot;SCAN&quot;</span>
+<span class="sd">                    1) If None, input wfn info will be used as initial guess.</span>
+<span class="sd">                    2) If &quot;continue&quot; is given, then it will not initialize</span>
+<span class="sd">                    but use the densities and orbitals stored. Meaningly,</span>
+<span class="sd">                    one can run a quick WY calculation as the initial</span>
+<span class="sd">                    guess. This can also be used to user speficified</span>
+<span class="sd">                    initial guess by setting Da, Coca, eigvec_a.</span>
+<span class="sd">                    3) If it&#39;s not continue, it would be expecting a</span>
+<span class="sd">                    method name string that works for psi4. A separate psi4 calculation</span>
+<span class="sd">                    would be performed.</span>
+<span class="sd">                sing: tuple of float of length 4, opt.</span>
+<span class="sd">                    Singularity parameter for _vxc_hole_quadrature()</span>
+<span class="sd">                    default: (1e-5, 1e-4, 1e-5, 1e-4)</span>
+<span class="sd">                    [0]: atol, [1]: atol1 for dft_spherical grid calculation.</span>
+<span class="sd">                    [2]: atol, [3]: atol1 for vxc_grid calculation.</span>
+<span class="sd">            return:</span>
+<span class="sd">                The result will be stored in self.grid.vxc</span>
+
+<span class="sd">        oc</span>
+<span class="sd">        --</span>
+<span class="sd">        Ou-Carter method</span>
+<span class="sd">        J. Chem. Theory Comput. 2018, 14, 5680−5689</span>
+<span class="sd">            Parameters:</span>
+<span class="sd">            -----------</span>
+<span class="sd">                maxiter: int</span>
+<span class="sd">                    same as opt_max_iter</span>
+<span class="sd">                vxc_grid: np.ndarray of shape (3, num_grid_points)</span>
+<span class="sd">                    The final result will be represented on this grid</span>
+<span class="sd">                    default: 1e-4</span>
+<span class="sd">                D_tol: float, opt</span>
+<span class="sd">                    convergence criteria for density matrices.</span>
+<span class="sd">                    default: 1e-7</span>
+<span class="sd">                eig_tol: float, opt</span>
+<span class="sd">                    convergence criteria for occupied eigenvalue spectrum.</span>
+<span class="sd">                    default: 1e-4</span>
+<span class="sd">                frac_old: float, opt</span>
+<span class="sd">                    Linear mixing parameter for current vxc and old vxc.</span>
+<span class="sd">                    If 0, no old vxc is mixed in.</span>
+<span class="sd">                    Should be in [0,1)</span>
+<span class="sd">                    default: 0.5.</span>
+<span class="sd">                init: string, opt</span>
+<span class="sd">                    Initial guess method.</span>
+<span class="sd">                    default: &quot;SCAN&quot;</span>
+<span class="sd">                    1) If None, input wfn info will be used as initial guess.</span>
+<span class="sd">                    2) If &quot;continue&quot; is given, then it will not initialize</span>
+<span class="sd">                    but use the densities and orbitals stored. Meaningly,</span>
+<span class="sd">                    one can run a quick WY calculation as the initial</span>
+<span class="sd">                    guess. This can also be used to user speficified</span>
+<span class="sd">                    initial guess by setting Da, Coca, eigvec_a.</span>
+<span class="sd">                    3) If it&#39;s not continue, it would be expecting a</span>
+<span class="sd">                    method name string that works for psi4. A separate psi4 calculation</span>
+<span class="sd">                    would be performed.</span>
+<span class="sd">                    wuyang</span>
+
+<span class="sd">        pdeco</span>
+<span class="sd">        -----</span>
+<span class="sd">        the PDE-Constrained Optimization method:</span>
+<span class="sd">        Int J Quantum Chem. 2018;118:e25425;</span>
+<span class="sd">        Nat Commun 10, 4497 (2019).</span>
+<span class="sd">            Parameters:</span>
+<span class="sd">            ----------</span>
+<span class="sd">                opt_max_iter: int</span>
+<span class="sd">                    maximum iteration</span>
+<span class="sd">                opt_method: string, opt</span>
+<span class="sd">                    Method for scipy optimizer</span>
+<span class="sd">                    Currently only used by wuyang and pdeco method.</span>
+<span class="sd">                    Defaul: &#39;L-BFGS-B&#39;</span>
+<span class="sd">                    Options: [&#39;L-BFGS-B&#39;, &#39;BFGS&#39;]</span>
+<span class="sd">                    https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.minimize.html</span>
+<span class="sd">                reg : float, opt</span>
+<span class="sd">                    Regularization constant for Wuyant Inversion.</span>
+<span class="sd">                    Default: None -&gt; No regularization is added.</span>
+<span class="sd">                    Becomes attribute of inverter -&gt; inverter.lambda_reg</span>
+<span class="sd">                gtol: float</span>
+<span class="sd">                    gtol for scipy.optimize.minimize: the gradient norm for</span>
+<span class="sd">                    convergence</span>
+<span class="sd">                opt: dict</span>
+<span class="sd">                    options for scipy.optimize.minimize</span>
+<span class="sd">                    Notice that opt has lower priorities than opt_max_iter and gtol.</span>
+<span class="sd">            return:</span>
+<span class="sd">                the result are stored in self.v_pbs</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1">#Generate Guide Potential</span>
+        <span class="k">if</span> <span class="n">method</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">==</span><span class="s1">&#39;mrks&#39;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">guide_potential_components</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="s1">&#39;hartree&#39;</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">guide_potential_components</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;The guide potential is changed to v_hartree.&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">generate_components</span><span class="p">([</span><span class="s2">&quot;hartree&quot;</span><span class="p">])</span>
+        <span class="k">elif</span> <span class="n">method</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">!=</span> <span class="s1">&#39;direct&#39;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">generate_components</span><span class="p">(</span><span class="n">guide_potential_components</span><span class="p">)</span>
+
+        <span class="c1">#Invert</span>
+        <span class="k">if</span> <span class="n">method</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s2">&quot;direct&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">direct_inversion</span><span class="p">(</span><span class="o">**</span><span class="n">keywords</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">method</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s2">&quot;wuyang&quot;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">wuyang</span><span class="p">(</span><span class="n">opt_max_iter</span><span class="p">,</span> <span class="o">**</span><span class="n">keywords</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">method</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s2">&quot;zmp&quot;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">zmp</span><span class="p">(</span><span class="n">opt_max_iter</span><span class="p">,</span> <span class="o">**</span><span class="n">keywords</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">method</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s2">&quot;mrks&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">mRKS</span><span class="p">(</span><span class="n">opt_max_iter</span><span class="p">,</span> <span class="o">**</span><span class="n">keywords</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">method</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s1">&#39;oc&#39;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">oucarter</span><span class="p">(</span><span class="n">opt_max_iter</span><span class="p">,</span> <span class="o">**</span><span class="n">keywords</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">method</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s1">&#39;pdeco&#39;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">pdeco</span><span class="p">(</span><span class="n">opt_max_iter</span><span class="p">,</span> <span class="o">**</span><span class="n">keywords</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Inversion method not available. Methods available: </span><span class="si">{</span><span class="p">[</span><span class="s1">&#39;wuyang&#39;</span><span class="p">,</span> <span class="s1">&#39;zmp&#39;</span><span class="p">,</span> <span class="s1">&#39;mrks&#39;</span><span class="p">,</span> <span class="s1">&#39;oc&#39;</span><span class="p">,</span> <span class="s1">&#39;pdeco&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Inverter.generate_components"><a class="viewcode-back" href="../../api/n2v.Inverter.html#n2v.Inverter.generate_components">[docs]</a>    <span class="k">def</span> <span class="nf">generate_components</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">guide_potential_components</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Generates exact potential components to be added to</span>
+<span class="sd">        the Hamiltonian to aide in the inversion procedure. </span>
+
+<span class="sd">        Parameters:</span>
+<span class="sd">        -----------</span>
+<span class="sd">        guide_potential_components: list</span>
+<span class="sd">            Components added as to guide inversion. </span>
+<span class="sd">            Can be chosen from {&quot;fermi_amandi&quot;, &quot;svwn&quot;}</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">va</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">vb</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>
+
+        <span class="n">N</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">nalpha</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">nbeta</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">J0</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">wfn</span><span class="p">)</span> <span class="o">==</span> <span class="n">psi4</span><span class="o">.</span><span class="n">core</span><span class="o">.</span><span class="n">CCWavefunction</span><span class="p">:</span>
+                <span class="n">nbf</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">nbf</span>
+                <span class="n">C_NO</span> <span class="o">=</span> <span class="n">psi4</span><span class="o">.</span><span class="n">core</span><span class="o">.</span><span class="n">Matrix</span><span class="p">(</span><span class="n">nbf</span><span class="p">,</span> <span class="n">nbf</span><span class="p">)</span>
+                <span class="n">eigs_NO</span> <span class="o">=</span> <span class="n">psi4</span><span class="o">.</span><span class="n">core</span><span class="o">.</span><span class="n">Vector</span><span class="p">(</span><span class="n">nbf</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">wfn</span><span class="o">.</span><span class="n">Da</span><span class="p">()</span><span class="o">.</span><span class="n">diagonalize</span><span class="p">(</span><span class="n">C_NO</span><span class="p">,</span> <span class="n">eigs_NO</span><span class="p">,</span> <span class="n">psi4</span><span class="o">.</span><span class="n">core</span><span class="o">.</span><span class="n">DiagonalizeOrder</span><span class="o">.</span><span class="n">Descending</span><span class="p">)</span>
+                <span class="n">occu</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">eigs_NO</span><span class="o">.</span><span class="n">np</span><span class="p">)</span>
+                <span class="n">New_Orb_a</span> <span class="o">=</span> <span class="n">occu</span> <span class="o">*</span> <span class="n">C_NO</span><span class="o">.</span><span class="n">np</span>
+                <span class="k">assert</span> <span class="n">np</span><span class="o">.</span><span class="n">allclose</span><span class="p">(</span><span class="n">New_Orb_a</span> <span class="o">@</span> <span class="n">New_Orb_a</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">Dt</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">ref</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                    <span class="n">New_Orb_b</span> <span class="o">=</span> <span class="n">New_Orb_a</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">wfn</span><span class="o">.</span><span class="n">Db</span><span class="p">()</span><span class="o">.</span><span class="n">diagonalize</span><span class="p">(</span><span class="n">C_NO</span><span class="p">,</span> <span class="n">eigs_NO</span><span class="p">,</span> <span class="n">psi4</span><span class="o">.</span><span class="n">core</span><span class="o">.</span><span class="n">DiagonalizeOrder</span><span class="o">.</span><span class="n">Descending</span><span class="p">)</span>
+                    <span class="n">occu</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">eigs_NO</span><span class="o">.</span><span class="n">np</span><span class="p">)</span>
+                    <span class="n">New_Orb_b</span> <span class="o">=</span> <span class="n">occu</span> <span class="o">*</span> <span class="n">C_NO</span><span class="o">.</span><span class="n">np</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">J0</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">form_jk</span><span class="p">(</span><span class="n">New_Orb_a</span><span class="p">,</span> <span class="n">New_Orb_b</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">J0</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">form_jk</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ct</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">ct</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+
+        <span class="k">if</span> <span class="s2">&quot;fermi_amaldi&quot;</span> <span class="ow">in</span> <span class="n">guide_potential_components</span><span class="p">:</span>
+            <span class="n">v_fa</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="mi">1</span><span class="o">/</span><span class="n">N</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">J0</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">J0</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">va</span> <span class="o">+=</span> <span class="n">v_fa</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">vb</span> <span class="o">+=</span> <span class="n">v_fa</span>
+        <span class="k">elif</span> <span class="s2">&quot;hartree&quot;</span> <span class="ow">in</span> <span class="n">guide_potential_components</span><span class="p">:</span>
+            <span class="n">v_hartree</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">J0</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">J0</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">va</span> <span class="o">+=</span> <span class="n">v_hartree</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">vb</span> <span class="o">+=</span> <span class="n">v_hartree</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Hartee nor FA was included.&quot;</span>
+                             <span class="s2">&quot;Convergence will likely not be achieved&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="s2">&quot;svwn&quot;</span> <span class="ow">in</span> <span class="n">guide_potential_components</span><span class="p">:</span>
+            <span class="k">if</span> <span class="s2">&quot;svwn&quot;</span> <span class="ow">in</span> <span class="n">guide_potential_components</span><span class="p">:</span>
+                <span class="n">_</span><span class="p">,</span> <span class="n">wfn_0</span> <span class="o">=</span> <span class="n">psi4</span><span class="o">.</span><span class="n">energy</span><span class="p">(</span> <span class="s2">&quot;svwn&quot;</span><span class="o">+</span><span class="s2">&quot;/&quot;</span><span class="o">+</span><span class="bp">self</span><span class="o">.</span><span class="n">basis_str</span><span class="p">,</span> <span class="n">molecule</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">mol</span> <span class="p">,</span> <span class="n">return_wfn</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">ref</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">ntarget</span> <span class="o">=</span> <span class="n">psi4</span><span class="o">.</span><span class="n">core</span><span class="o">.</span><span class="n">Matrix</span><span class="o">.</span><span class="n">from_array</span><span class="p">(</span> <span class="p">[</span> <span class="bp">self</span><span class="o">.</span><span class="n">Dt</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">Dt</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="p">]</span> <span class="p">)</span>
+                <span class="n">wfn_0</span><span class="o">.</span><span class="n">V_potential</span><span class="p">()</span><span class="o">.</span><span class="n">set_D</span><span class="p">(</span> <span class="p">[</span><span class="n">ntarget</span><span class="p">]</span> <span class="p">)</span>
+                <span class="n">vxc_a</span> <span class="o">=</span> <span class="n">psi4</span><span class="o">.</span><span class="n">core</span><span class="o">.</span><span class="n">Matrix</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">nbf</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">nbf</span> <span class="p">)</span>
+                <span class="n">wfn_0</span><span class="o">.</span><span class="n">V_potential</span><span class="p">()</span><span class="o">.</span><span class="n">compute_V</span><span class="p">([</span><span class="n">vxc_a</span><span class="p">])</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">va</span> <span class="o">+=</span> <span class="n">vxc_a</span><span class="o">.</span><span class="n">np</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">vb</span> <span class="o">+=</span> <span class="n">vxc_a</span><span class="o">.</span><span class="n">np</span>
+            <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">ref</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+                <span class="n">na_target</span> <span class="o">=</span> <span class="n">psi4</span><span class="o">.</span><span class="n">core</span><span class="o">.</span><span class="n">Matrix</span><span class="o">.</span><span class="n">from_array</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">Dt</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="p">)</span>
+                <span class="n">nb_target</span> <span class="o">=</span> <span class="n">psi4</span><span class="o">.</span><span class="n">core</span><span class="o">.</span><span class="n">Matrix</span><span class="o">.</span><span class="n">from_array</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">Dt</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="p">)</span>
+                <span class="n">wfn_0</span><span class="o">.</span><span class="n">V_potential</span><span class="p">()</span><span class="o">.</span><span class="n">set_D</span><span class="p">(</span> <span class="p">[</span><span class="n">na_target</span><span class="p">,</span> <span class="n">nb_target</span><span class="p">]</span> <span class="p">)</span>
+                <span class="n">vxc_a</span> <span class="o">=</span> <span class="n">psi4</span><span class="o">.</span><span class="n">core</span><span class="o">.</span><span class="n">Matrix</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">nbf</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">nbf</span> <span class="p">)</span>
+                <span class="n">vxc_b</span> <span class="o">=</span> <span class="n">psi4</span><span class="o">.</span><span class="n">core</span><span class="o">.</span><span class="n">Matrix</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">nbf</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">nbf</span> <span class="p">)</span>
+                <span class="n">wfn_0</span><span class="o">.</span><span class="n">V_potential</span><span class="p">()</span><span class="o">.</span><span class="n">compute_V</span><span class="p">([</span><span class="n">vxc_a</span><span class="p">,</span> <span class="n">vxc_b</span><span class="p">])</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">va</span> <span class="o">+=</span> <span class="n">vxc_a</span><span class="o">.</span><span class="n">np</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">vb</span> <span class="o">+=</span> <span class="n">vxc_b</span><span class="o">.</span><span class="n">np</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">guide_potential_components</span> <span class="o">=</span> <span class="n">guide_potential_components</span></div>
+
+<div class="viewcode-block" id="Inverter.finalize_energy"><a class="viewcode-back" href="../../api/n2v.Inverter.html#n2v.Inverter.finalize_energy">[docs]</a>    <span class="k">def</span> <span class="nf">finalize_energy</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Calculates energy contributions</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">target_one</span>        <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">wfn</span><span class="o">.</span><span class="n">to_file</span><span class="p">()[</span><span class="s1">&#39;floatvar&#39;</span><span class="p">][</span><span class="s1">&#39;ONE-ELECTRON ENERGY&#39;</span><span class="p">]</span>
+        <span class="n">target_two</span>        <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">wfn</span><span class="o">.</span><span class="n">to_file</span><span class="p">()[</span><span class="s1">&#39;floatvar&#39;</span><span class="p">][</span><span class="s1">&#39;TWO-ELECTRON ENERGY&#39;</span><span class="p">]</span>
+
+        <span class="n">energy_kinetic</span>    <span class="o">=</span> <span class="n">contract</span><span class="p">(</span><span class="s1">&#39;ij,ij&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Da</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">Db</span><span class="p">))</span>
+        <span class="n">energy_external</span>   <span class="o">=</span> <span class="n">contract</span><span class="p">(</span><span class="s1">&#39;ij,ij&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">V</span><span class="p">,</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Da</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">Db</span><span class="p">))</span>
+        <span class="n">energy_hartree_a</span>  <span class="o">=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">contract</span><span class="p">(</span><span class="s1">&#39;ij,ji&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">J0</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">J0</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">Da</span><span class="p">)</span>
+        <span class="n">energy_hartree_b</span>  <span class="o">=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">contract</span><span class="p">(</span><span class="s1">&#39;ij,ji&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">J0</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">J0</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">Db</span><span class="p">)</span>
+
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;WARNING: XC Energy is not yet properly calculated&quot;</span><span class="p">)</span>
+        <span class="n">energies</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;One-Electron Energy&quot;</span> <span class="p">:</span> <span class="n">energy_kinetic</span> <span class="o">+</span> <span class="n">energy_external</span><span class="p">,</span>
+                    <span class="s2">&quot;Two-Electron Energy&quot;</span> <span class="p">:</span> <span class="n">energy_hartree_a</span> <span class="o">+</span> <span class="n">energy_hartree_b</span><span class="p">,</span>
+                    <span class="c1"># &quot;XC&quot;                  : energy_ks,</span>
+                    <span class="c1"># &quot;Total Energy&quot;        : energy_kinetic   + energy_external  + \</span>
+                    <span class="c1">#                         energy_hartree_a + energy_hartree_b + \</span>
+                    <span class="c1">#                         energy_ks </span>
+                    <span class="p">}</span>
+
+        <span class="n">target_energies</span> <span class="o">=</span>  <span class="p">{</span><span class="s2">&quot;One-Electron Energy&quot;</span> <span class="p">:</span> <span class="n">target_one</span><span class="p">,</span>
+                            <span class="s2">&quot;Two-Electron Energy&quot;</span> <span class="p">:</span> <span class="n">target_two</span><span class="p">,</span>
+                           <span class="p">}</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">energies</span> <span class="o">=</span> <span class="n">energies</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">target_energies</span> <span class="o">=</span> <span class="n">target_energies</span></div></div>
+
+        <span class="c1"># print(f&quot;Final Energies: {self.energies}&quot;)</span>
+        <span class="c1"># print(f&quot;Target Energies: {self.target_energies}&quot;)</span>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2020, Wasserman Group.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>
