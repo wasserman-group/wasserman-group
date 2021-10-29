@@ -1,5 +1,0 @@
-**Getting Started**
-===============
-
-This page details how to get started with n2v. 
-I'll show you how to do things in n2v

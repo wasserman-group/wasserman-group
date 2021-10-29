@@ -1,9 +1,0 @@
-Inversion
-=========
-
-Hello, you are about to invert, are you happy?
-
-
-.. toctree::
-   :maxdepth: 1
-   :caption: Contents:
