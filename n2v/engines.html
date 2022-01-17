@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="theme-color" content="#2D2D2D" />
   
-  <title>n2v :: Search</title>
+  <title>n2v :: Engines</title>
   
 
   <link rel="icon" type="image/png" sizes="32x32" href="_static/img/favicon-32x32.png">
@@ -16,18 +16,12 @@
   <link rel="stylesheet" href="_static/css/custom.css"/>
 
   <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-    
       <script type="text/javascript" src="_static/jquery.js"></script>
       <script type="text/javascript" src="_static/underscore.js"></script>
       <script type="text/javascript" src="_static/doctools.js"></script>
-      <script type="text/javascript" src="_static/searchtools.js"></script>
   
-    <script src="_static/language_data.js"></script>
 
-  <script src="https://email.tl.fortawesome.com/c/eJxNjUEOgyAQAF8jR7Kw6wIHDh7sP1Cw2mgxgmn6-3JsMqc5zEQfE8dkxOY1KKMUOI3ACFKRJpSW2AAp7ontYIaxI6i7XPJVwyeVfCQ550Os3jLrGSNOLgbdAy6s0PBk2TFNjEbsfq31LB0OnX407pJa5v2faRadwSW63mn5KuLyR9j2tgx3zecanl-55R_-jjPs"></script>
-  <script src="searchindex.js" defer></script>
-   
-
+  <script src="https://email.tl.fortawesome.com/c/eJxNjUEOgyAQAF8jR7Kw6wIHDh7sP1Cw2mgxgmn6-3JsMqc5zEQfE8dkxOY1KKMUOI3ACFKRJpSW2AAp7ontYIaxI6i7XPJVwyeVfCQ550Os3jLrGSNOLgbdAy6s0PBk2TFNjEbsfq31LB0OnX407pJa5v2faRadwSW63mn5KuLyR9j2tgx3zecanl-55R_-jjPs"></script> 
 </head>
 
 <body>
@@ -50,14 +44,17 @@
       <div id="main-content-container">
         <div id="main-content" role="main">
           
-  <noscript>
-    <p>Documentation searching relies on Javascript. Please enable it.</p>
-  </noscript>
-
-  
-  <div id="search-results">
-  
-  </div>
+  <div class="section" id="engines">
+<h1><strong>Engines</strong><a class="headerlink" href="#engines" title="Permalink to this headline">¶</a></h1>
+<p>To aid in lowering the barrier of using <strong>n2v</strong>, we introduce the use of engines.
+We call an engine any computational chemistry code that can be interfaced with <strong>n2v</strong> to perform its tasks.
+This is done through an abstract class called the <em>Engine</em>. This class defines all the methods that an engine needs to perform to function properly with <strong>n2v</strong>.
+The <em>Engine</em> expects each package to be able to produce components such as matrices in the atomic orbital basis as well as components on the grid.</p>
+<p>In order to use or extend the Engines framework, one ought to work in the <em>Engine</em> branch of n2v.
+All engines are located in the <em>n2v/engines</em> folder. The file <em>engine.py</em> contains an abstract class that specifies an engine’s methods. The currently available methods require these. If one is only interested in one or a few methods, one can always add the method with a <em>pass</em> inside to make Python happy.</p>
+<p>Most methods are standard and straightforward, like requesting an overlap matrix of the AO basis set used or computing the Hartree potential/energy given an electronic density in the AO basis.</p>
+<p>Next, one needs to add the new engine to the __init__ in the Inverter located in <em>n2v/inverter.py</em>.</p>
+</div>
 
 
         </div>
@@ -66,7 +63,7 @@
       <div id="side-menu-container">
 
         <div id="search" role="search">
-        <form id="rtd-search-form" class="wy-form" action="#" method="get">
+        <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
             <input type="text" name="q" placeholder="Search..." />
             <input type="hidden" name="check_keywords" value="yes" />
             <input type="hidden" name="area" value="default" />
@@ -81,7 +78,7 @@
   
   
     <p class="caption"><span class="caption-text">Contents:</span></p>
-<ul>
+<ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="install.html"><strong>Installation</strong></a></li>
 <li class="toctree-l1"><a class="reference internal" href="first_steps.html"><strong>First Steps</strong></a></li>
 <li class="toctree-l1"><a class="reference internal" href="on_the_grid.html"><strong>On the Grid</strong></a></li>
@@ -102,7 +99,7 @@
 </li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="engines.html"><strong>Engines</strong></a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#"><strong>Engines</strong></a></li>
 </ul>
 
   
@@ -121,6 +118,8 @@
         <ul id="build-details">
             
                 <li class="footer-element">
+                    
+                        <a href="_sources/engines.rst.txt" rel="nofollow"> source</a>
                     
                 </li>
             

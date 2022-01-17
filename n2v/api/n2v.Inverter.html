@@ -116,22 +116,19 @@ if v_pbs is not zeroed.</p>
 <tr class="row-odd"><td><p><a class="reference internal" href="#n2v.Inverter.diagonalize" title="n2v.Inverter.diagonalize"><code class="xref py py-obj docutils literal notranslate"><span class="pre">diagonalize</span></code></a>(matrix, ndocc)</p></td>
 <td><p>Diagonalizes Fock Matrix</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#n2v.Inverter.finalize_energy" title="n2v.Inverter.finalize_energy"><code class="xref py py-obj docutils literal notranslate"><span class="pre">finalize_energy</span></code></a>()</p></td>
-<td><p>Calculates energy contributions</p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#n2v.Inverter.form_jk" title="n2v.Inverter.form_jk"><code class="xref py py-obj docutils literal notranslate"><span class="pre">form_jk</span></code></a>(Cocc_a, Cocc_b)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#n2v.Inverter.form_jk" title="n2v.Inverter.form_jk"><code class="xref py py-obj docutils literal notranslate"><span class="pre">form_jk</span></code></a>(Cocc_a, Cocc_b)</p></td>
 <td><p>Generates Coulomb and Exchange matrices from occupied orbitals</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#n2v.Inverter.generate_components" title="n2v.Inverter.generate_components"><code class="xref py py-obj docutils literal notranslate"><span class="pre">generate_components</span></code></a>(guide_potential_components)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#n2v.Inverter.generate_components" title="n2v.Inverter.generate_components"><code class="xref py py-obj docutils literal notranslate"><span class="pre">generate_components</span></code></a>(guide_potential_components)</p></td>
 <td><p>Generates exact potential components to be added to the Hamiltonian to aide in the inversion procedure.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#n2v.Inverter.generate_jk" title="n2v.Inverter.generate_jk"><code class="xref py py-obj docutils literal notranslate"><span class="pre">generate_jk</span></code></a>([gen_K])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#n2v.Inverter.generate_jk" title="n2v.Inverter.generate_jk"><code class="xref py py-obj docutils literal notranslate"><span class="pre">generate_jk</span></code></a>([gen_K])</p></td>
 <td><p>Creates jk object for generation of Coulomb and Exchange matrices 1.0e9 B -&gt; 1.0 GB</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#n2v.Inverter.generate_mints_matrices" title="n2v.Inverter.generate_mints_matrices"><code class="xref py py-obj docutils literal notranslate"><span class="pre">generate_mints_matrices</span></code></a>()</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#n2v.Inverter.generate_mints_matrices" title="n2v.Inverter.generate_mints_matrices"><code class="xref py py-obj docutils literal notranslate"><span class="pre">generate_mints_matrices</span></code></a>()</p></td>
 <td><p>Generates matrices that are methods of a mints object</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#n2v.Inverter.invert" title="n2v.Inverter.invert"><code class="xref py py-obj docutils literal notranslate"><span class="pre">invert</span></code></a>(method[, guide_potential_components, …])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#n2v.Inverter.invert" title="n2v.Inverter.invert"><code class="xref py py-obj docutils literal notranslate"><span class="pre">invert</span></code></a>(method[, guide_potential_components, …])</p></td>
 <td><p>Handler to all available inversion methods</p></td>
 </tr>
 </tbody>
@@ -158,12 +155,6 @@ if v_pbs is not zeroed.</p>
 </p>
 </dd>
 </dl>
-</dd></dl>
-
-<dl class="py method">
-<dt id="n2v.Inverter.finalize_energy">
-<code class="sig-name descname"><span class="pre">finalize_energy</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/n2v/inverter.html#Inverter.finalize_energy"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#n2v.Inverter.finalize_energy" title="Permalink to this definition">¶</a></dt>
-<dd><p>Calculates energy contributions</p>
 </dd></dl>
 
 <dl class="py method">
@@ -489,6 +480,7 @@ Notice that opt has lower priorities than opt_max_iter and gtol.</p>
 </li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="../engines.html"><strong>Engines</strong></a></li>
 </ul>
 
   

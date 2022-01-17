@@ -62,10 +62,10 @@
 <span class="k">except</span><span class="p">:</span>
     <span class="k">pass</span>
 
-<span class="kn">from</span> <span class="nn">.cubeprop</span> <span class="kn">import</span> <span class="n">Cubeprop</span>
+<span class="c1"># from .cubeprop import Cubeprop</span>
 <span class="kn">from</span> <span class="nn">.basis_set_artifact_correction</span> <span class="kn">import</span> <span class="n">basis_set_correction</span><span class="p">,</span> <span class="n">invert_kohn_sham_equations</span>
 
-<div class="viewcode-block" id="Grider"><a class="viewcode-back" href="../../../api/n2v.Grider.html#n2v.Grider">[docs]</a><span class="k">class</span> <span class="nc">Grider</span><span class="p">(</span><span class="n">Cubeprop</span><span class="p">):</span>
+<div class="viewcode-block" id="Grider"><a class="viewcode-back" href="../../../api/n2v.Grider.html#n2v.Grider">[docs]</a><span class="k">class</span> <span class="nc">Grider</span><span class="p">():</span>
 
 <div class="viewcode-block" id="Grider.grid_to_blocks"><a class="viewcode-back" href="../../../api/n2v.Grider.html#n2v.Grider.grid_to_blocks">[docs]</a>    <span class="k">def</span> <span class="nf">grid_to_blocks</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">grid</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -548,8 +548,14 @@
 
 <span class="sd">        &quot;&quot;&quot;</span>
 
-        <span class="k">if</span> <span class="n">func_id</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Only LDA fucntionals are supported on the grid&quot;</span><span class="p">)</span>
+        <span class="n">local_functionals</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">546</span><span class="p">,</span><span class="mi">549</span><span class="p">,</span><span class="mi">532</span><span class="p">,</span><span class="mi">692</span><span class="p">,</span><span class="mi">641</span><span class="p">,</span><span class="mi">552</span><span class="p">,</span><span class="mi">287</span><span class="p">,</span><span class="mi">307</span><span class="p">,</span><span class="mi">578</span><span class="p">,</span><span class="mi">5</span><span class="p">,</span><span class="mi">24</span><span class="p">,</span><span class="mi">4</span><span class="p">,</span><span class="mi">579</span><span class="p">,</span><span class="mi">308</span><span class="p">,</span><span class="mi">289</span><span class="p">,</span><span class="mi">551</span><span class="p">,</span>
+                             <span class="mi">22</span><span class="p">,</span><span class="mi">23</span><span class="p">,</span><span class="mi">14</span><span class="p">,</span><span class="mi">11</span><span class="p">,</span><span class="mi">574</span><span class="p">,</span><span class="mi">573</span><span class="p">,</span><span class="mi">554</span><span class="p">,</span><span class="mi">5900</span><span class="p">,</span><span class="mi">12</span><span class="p">,</span><span class="mi">13</span><span class="p">,</span><span class="mi">25</span><span class="p">,</span><span class="mi">9</span><span class="p">,</span><span class="mi">10</span><span class="p">,</span><span class="mi">27</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">684</span><span class="p">,</span><span class="mi">683</span><span class="p">,</span><span class="mi">17</span><span class="p">,</span><span class="mi">7</span><span class="p">,</span>
+                             <span class="mi">28</span><span class="p">,</span><span class="mi">29</span><span class="p">,</span><span class="mi">30</span><span class="p">,</span><span class="mi">31</span><span class="p">,</span><span class="mi">8</span><span class="p">,</span><span class="mi">317</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">6</span><span class="p">,</span><span class="mi">536</span><span class="p">,</span><span class="mi">537</span><span class="p">,</span><span class="mi">538</span><span class="p">,</span><span class="mi">318</span><span class="p">,</span><span class="mi">577</span><span class="p">,</span><span class="mi">259</span><span class="p">,</span><span class="mi">547</span><span class="p">,</span><span class="mi">548</span><span class="p">,</span><span class="mi">20</span><span class="p">,</span><span class="mi">599</span><span class="p">,</span><span class="mi">43</span><span class="p">,</span>
+                             <span class="mi">51</span><span class="p">,</span><span class="mi">580</span><span class="p">,</span><span class="mi">50</span><span class="p">,</span><span class="mi">550</span>
+                             <span class="p">]</span>
+
+        <span class="k">if</span> <span class="n">func_id</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">local_functionals</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Only local functionals are supported on the grid&quot;</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">Da</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">Da</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">Dt</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
@@ -582,9 +588,9 @@
                 <span class="n">ingredients</span><span class="p">[</span><span class="s2">&quot;rho&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">density</span><span class="p">[</span><span class="n">offset</span> <span class="o">-</span> <span class="n">b_points</span> <span class="p">:</span> <span class="n">offset</span><span class="p">,</span> <span class="p">:]</span>
 
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">ref</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
-                <span class="n">functional</span> <span class="o">=</span> <span class="n">Functional</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+                <span class="n">functional</span> <span class="o">=</span> <span class="n">Functional</span><span class="p">(</span><span class="n">func_id</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
-                <span class="n">functional</span> <span class="o">=</span> <span class="n">Functional</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span> 
+                <span class="n">functional</span> <span class="o">=</span> <span class="n">Functional</span><span class="p">(</span><span class="n">func_id</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span> 
             <span class="n">xc_dictionary</span> <span class="o">=</span> <span class="n">functional</span><span class="o">.</span><span class="n">compute</span><span class="p">(</span><span class="n">ingredients</span><span class="p">)</span>
             <span class="n">vxc</span><span class="p">[</span><span class="n">offset</span> <span class="o">-</span> <span class="n">b_points</span> <span class="p">:</span> <span class="n">offset</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">xc_dictionary</span><span class="p">[</span><span class="s1">&#39;vrho&#39;</span><span class="p">]</span>
 
@@ -835,6 +841,15 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../install.html"><strong>Installation</strong></a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../first_steps.html"><strong>First Steps</strong></a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../on_the_grid.html"><strong>On the Grid</strong></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../invert.html"><strong>Inverting A Density</strong></a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../invert/direct.html">Direct</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../invert/zmp.html">ZMP</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../invert/wu_yang.html">Wu Yang</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../invert/ou_carter.html">Ou and Carter</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../invert/pdeco.html">PDE Constrained Optimization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../invert/mrks.html">Modified Ryabinkin-Kohut-Staroverov</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="../../../api.html"><strong>API Documentation</strong></a><ul>
 <li class="toctree-l2"><a class="reference internal" href="../../../api.html#module-n2v">n2v Package</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="../../../api.html#classes">Classes</a></li>
@@ -868,7 +883,7 @@
 
         
             <div id="copyright">
-                &copy; 2020, Wasserman Group. Project structure based on the Computational Molecular Science Python Cookiecutter version 1.5
+                &copy; 2020, Wasserman Group.
             </div>
         
 
