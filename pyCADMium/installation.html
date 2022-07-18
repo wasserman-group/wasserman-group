@@ -6,7 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="theme-color" content="#2D2D2D" />
   
-  <title>pyCADMium :: Welcome to pyCADMium!</title>
+  <title>pyCADMium :: Installation</title>
   
 
   <link rel="icon" type="image/png" sizes="32x32" href="_static/img/favicon-32x32.png">
@@ -46,43 +46,31 @@
       <div id="main-content-container">
         <div id="main-content" role="main">
           
-  <section id="welcome-to-pycadmium">
-<h1>Welcome to pyCADMium!<a class="headerlink" href="#welcome-to-pycadmium" title="Permalink to this headline">¶</a></h1>
-<p>Python module that uses a prolate spheroidal (PS) coordinate grid to accurately perform computational chemistry calculations on atoms and diatomic molecules. The name is an acronym for “Chemical Atoms in Molecules” that references the idea of chemically significant fragments within a molecule.
-<em>pyCADMium</em> originated in a proprietary programming language but has been rewritten from the ground up as an open-source alternative.</p>
-<div class="toctree-wrapper compound">
-<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="coordinate_system.html">The Coordinate System</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="coordinate_system.html#symmetry-considerations">Symmetry Considerations</a></li>
-<li class="toctree-l2"><a class="reference internal" href="coordinate_system.html#discretization">Discretization</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting Started</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="getting_started.html#molecules-in-the-psgrid">Molecules in the PSgrid</a></li>
-<li class="toctree-l2"><a class="reference internal" href="getting_started.html#kohn-sham-calculation">Kohn-Sham calculation</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="api.html">API Documentation</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="api.html#module-CADMium">CADMium Package</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="api.html#functions">Functions</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api.html#classes">Classes</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api.html#class-inheritance-diagram">Class Inheritance Diagram</a></li>
-</ul>
-</li>
-</ul>
-</li>
-</ul>
-</div>
-</section>
-<section id="indices-and-tables">
-<h1>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Permalink to this headline">¶</a></h1>
+  <section id="installation">
+<h1>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h1>
 <ul class="simple">
-<li><p><a class="reference internal" href="genindex.html"><span class="std std-ref">Index</span></a></p></li>
-<li><p><a class="reference internal" href="py-modindex.html"><span class="std std-ref">Module Index</span></a></p></li>
-<li><p><a class="reference internal" href="search.html"><span class="std std-ref">Search Page</span></a></p></li>
+<li><p>Clone and install from <a class="reference external" href="https://github.com/wasserman-group/pyCADMium">this</a> repository.</p></li>
+<li><p>If installing in Windows, we recommend the use of <a class="reference external" href="https://docs.microsoft.com/en-us/windows/wsl/install-win10">WSL</a>.</p></li>
 </ul>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>git clone https://github.com/wasserman-group/CADMium.git
+<span class="nb">cd</span> CADMium
+pip install .
+</pre></div>
+</div>
+<p>pylibxc must be installed as well.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip install pylibxc2
+</pre></div>
+</div>
+<ul class="simple">
+<li><p>Alternative, one can install libxc through conda and install pylibxc manually.</p></li>
+</ul>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>conda install -c conda-forge libxc
+wget http://www.tddft.org/programs/libxc/down.php?file<span class="o">=</span><span class="m">5</span>.0.0/libxc-5.0.0.tar.gz <span class="c1"># Replace with most recent libxc download link</span>
+tar -xf libxc-5.0.0.tar.gz                                                      <span class="c1"># Replace with name of downloaded file</span>
+<span class="nb">cd</span> libxc-5.0.0                                                                  <span class="c1"># Replace with name of downloaded file</span>
+python setup.py install
+</pre></div>
+</div>
 </section>
 
 
@@ -107,8 +95,8 @@
   
   
     <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="coordinate_system.html">The Coordinate System</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="coordinate_system.html#symmetry-considerations">Symmetry Considerations</a></li>
 <li class="toctree-l2"><a class="reference internal" href="coordinate_system.html#discretization">Discretization</a></li>
@@ -147,7 +135,7 @@
             
                 <li class="footer-element">
                     
-                        <a href="_sources/index.rst.txt" rel="nofollow"> source</a>
+                        <a href="_sources/installation.rst.txt" rel="nofollow"> source</a>
                     
                 </li>
             
